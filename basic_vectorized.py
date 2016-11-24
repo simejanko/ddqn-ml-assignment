@@ -43,8 +43,12 @@ render = False
 
 def wait_input():
     global render
-    if readchar.readkey() == 'r':
-        render = not render
+    while True:
+        c = readchar.readkey()
+        if c == 'r':
+            render = not render
+        elif c == readchar.key.CTRL_C:
+            break
 
 def modify_target(t, a, r, d, n_m):
     t[a] = r
