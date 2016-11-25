@@ -31,14 +31,13 @@ model.add(Activation("relu"))
 model.add(Dense(env.action_space.n, W_regularizer=l2(0.01)))
 model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_error])
 
-dqn = DQN(model, replay_size=25000)
+dqn = DQN(model, replay_size=25000, f_epsilon=50000, gamma=1.0)
 
 
 for i_episode in range(500000):
     print(dqn.epsilon)
     observation = env.reset()
     done = False
-    t_s = 0
     r_sum = 0
     while not done:
         if render:
@@ -46,6 +45,6 @@ for i_episode in range(500000):
         action = dqn.predict(observation)
         new_observation, reward, done, _ = env.step(action)
         dqn.learning_step(observation, action, reward, new_observation, done)
-
-        t_s += 1
-    print("Episode {} finished with {} reward".format(i_episode, t_s+1))
+        observation = new_observation
+        r_sum += reward
+    print("Episode {} finished with {} reward".format(i_episode, r_sum))

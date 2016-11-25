@@ -27,7 +27,7 @@ class ReplayMemory():
 
 class DQN():
     def __init__(self, model, replay_size=10000, s_epsilon=1.0, e_epsilon=0.1,
-                 f_epsilon=10000, batch_size=32, gamma=0.95):
+                 f_epsilon=100000, batch_size=32, gamma=0.95):
         """
         :param model: Keras neural network model.
         :param replay_size: Size of experience replay memory.
