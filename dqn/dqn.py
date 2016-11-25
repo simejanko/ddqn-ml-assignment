@@ -81,7 +81,7 @@ class DQN():
 
         if (len(experiences) > 0):
             if self.epsilon > self.e_epsilon:
-                self.epsilon -= self.d_epsilon
+                self.epsilon += self.d_epsilon
 
             obs, actions, rewards, obs2, dones = map(np.array, zip(*experiences))
             targets = self.model.predict_on_batch(obs)
