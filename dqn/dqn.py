@@ -1,15 +1,6 @@
-import gym
-from colorama.initialise import init
-from keras.models import  Sequential
-from keras.layers import Dense, Activation
-from keras.regularizers import l2
-from keras.optimizers import RMSprop
-from keras.metrics import mean_squared_error
-import gym_ple
 import numpy as np
 import random
-import readchar
-import threading
+
 
 class ReplayMemory():
     """
@@ -34,15 +25,11 @@ class ReplayMemory():
             return []
         return random.sample(self.memory, n)
 
-#TODO: decouple environment...
 class DQN():
-    def __init__(self, model, env_step, env_render=None, replay_size=10000, s_epsilon=1.0, e_epsilon=0.1,
+    def __init__(self, model, replay_size=10000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=10000, batch_size=32, gamma=0.95):
         """
         :param model: Keras neural network model.
-        :param env_step: Environment step function that accepts action and returns
-               (new_state, reward, is_new_state_terminal, meta-info) tuple
-        :param env_render: Environment render function (Optional).
         :param replay_size: Size of experience replay memory.
         :param s_epsilon: Start epsilon for Q-learning.
         :param e_epsilon: End epsilon for Q-learning.
@@ -53,8 +40,6 @@ class DQN():
 
         self.model = model
         self.n_actions = model.layers[-1].output_shape[1]
-        self.env_step = env_step
-        self.env_render = env_render
         self.replay_memory = ReplayMemory(replay_size)
         self.epsilon = s_epsilon
         self.e_epsilon = e_epsilon
@@ -80,15 +65,17 @@ class DQN():
         Q = self.model.predict_on_batch(observation.reshape(1, -1))[0]
         return np.argmax(Q)
 
-    def learning_step(self, observation, render=True):
+    def learning_step(self, observation, action, reward, new_observation, done):
         """
-        Preform DQN learning step and return new observation.
+        Performs DQN learning step
+        :param observation: Observation before performing the action.
+        :param action: Action performed.
+        :param reward: Reward after performing the action.
+        :param new_observation:Observation after performing the action.
+        :param done: Bool - Is new state/observation terminal.
+        :return:
         """
-        if render and self.env_render != None:
-            self.env_render()
 
-        action = self.predict(observation)
-        new_observation, reward, done, _ = self.env_step(action)
         self.replay_memory.insert(observation, action, reward, new_observation, done)
         experiences = self.replay_memory.sample(self.batch_size)
 
@@ -104,43 +91,3 @@ class DQN():
 
             self.model.train_on_batch(obs, targets)
         return observation
-
-render = False
-def wait_input():
-    global render
-    global reset
-    while True:
-        c = readchar.readkey()
-        if c=='s':
-            reset = True
-        elif c == readchar.key.CTRL_C:
-            break
-
-input_t = threading.Thread(target=wait_input)
-input_t.start()
-
-env = gym.make('CartPole-v0')
-model = Sequential()
-model.add(Dense(12, input_shape=env.observation_space.shape , W_regularizer=l2(0.01)))
-model.add(Activation("relu"))
-model.add(Dense(6, W_regularizer=l2(0.01)))
-model.add(Activation("relu"))
-model.add(Dense(env.action_space.n, W_regularizer=l2(0.01)))
-model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_error])
-
-dqn = DQN(model, env.step, replay_size=25000)
-
-
-for i_episode in range(500000):
-    print(dqn.epsilon)
-    observation = env.reset()
-    done = False
-    t_s = 0
-    r_sum = 0
-    while not done:
-        if render:
-            env.render()
-        observation =dqn.learning_step(observation, render=False)
-
-        t_s += 1
-    print("Episode {} finished with {} reward".format(i_episode, t_s+1))
