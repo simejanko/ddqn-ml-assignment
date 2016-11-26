@@ -13,7 +13,7 @@ from scipy.misc import imresize
 import numpy as np
 
 render = False
-"""def wait_input():
+def wait_input():
     global render
     with Input(keynames='curses') as input_generator:
         for e in input_generator:
@@ -21,7 +21,7 @@ render = False
                 render = not render
 
 input_t = threading.Thread(target=wait_input)
-input_t.start()"""
+input_t.start()
 
 def rgb2gray(rgb):
     r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
@@ -74,14 +74,14 @@ model.add(Dense(128, W_regularizer=l2(0.001), activation="relu"))
 model.add(Dense(env.action_space.n, W_regularizer=l2(0.001)))
 model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_error])
 
-dqn = DQN(model, replay_size=100, f_epsilon=500000, gamma=0.95)
+dqn = DQN(model, replay_size=50000, f_epsilon=500000, gamma=0.95)
 
 #preprocess_input(observation, 35,15, 84)
 for i_episode in range(5000000):
     print(dqn.epsilon)
     o1 = env.reset()
     o2 = env.step(env.action_space.sample())[0]
-    o = preprocess_input((o1, o2), 35, 35, 84)
+    o = preprocess_input((o1, o2), 35, 15, 84)
     done = False
     r_sum = 0
     while not done:
@@ -89,7 +89,7 @@ for i_episode in range(5000000):
             env.render()
         action = dqn.predict(o)
         o3, reward, done, _ = env.step(action)
-        o_n = preprocess_input((o2, o3), 35, 35, 84)
+        o_n = preprocess_input((o2, o3), 35, 15, 84)
         dqn.learning_step(o, action, reward, o_n, done)
         o2 = o3
         r_sum += reward
