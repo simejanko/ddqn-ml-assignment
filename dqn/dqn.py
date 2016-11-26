@@ -62,7 +62,7 @@ class DQN():
         if random.random() < self.epsilon:
             return random.randint(0,self.n_actions-1)
 
-        Q = self.model.predict_on_batch(observation)[0]
+        Q = self.model.predict_on_batch(np.expand_dims(observation, axis=0))[0]
         return np.argmax(Q)
 
     def learning_step(self, observation, action, reward, new_observation, done):

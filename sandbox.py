@@ -74,7 +74,7 @@ model.add(Dense(128, W_regularizer=l2(0.001), activation="relu"))
 model.add(Dense(env.action_space.n, W_regularizer=l2(0.001)))
 model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_error])
 
-dqn = DQN(model, replay_size=50000, f_epsilon=500000, gamma=0.95)
+dqn = DQN(model, replay_size=1000, f_epsilon=500000, gamma=0.95)
 
 #preprocess_input(observation, 35,15, 84)
 for i_episode in range(5000000):
@@ -92,5 +92,6 @@ for i_episode in range(5000000):
         o_n = preprocess_input((o2, o3), 35, 15, 84)
         dqn.learning_step(o, action, reward, o_n, done)
         o2 = o3
+        o = o_n
         r_sum += reward
     print("Episode {} finished with {} reward".format(i_episode, r_sum))
