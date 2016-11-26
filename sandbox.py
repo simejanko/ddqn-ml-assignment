@@ -1,4 +1,3 @@
-import readchar
 import threading
 import gym
 from keras.models import  Sequential
@@ -8,16 +7,17 @@ from keras.optimizers import RMSprop
 from keras.metrics import mean_squared_error
 import gym_ple
 from dqn.dqn import DQN
+from curtsies import Input
 
 render = False
 def wait_input():
     global render
-    while True:
-        c = readchar.readkey()
-        if c=='r':
-            render = not render
-        elif c == readchar.key.CTRL_C:
-            break
+    with Input(keynames='curses') as input_generator:
+        for e in input_generator:
+            if e == 'r':
+                render = not render
+            elif e == 'e':
+                break
 
 input_t = threading.Thread(target=wait_input)
 input_t.start()
@@ -31,7 +31,7 @@ model.add(Activation("relu"))
 model.add(Dense(env.action_space.n, W_regularizer=l2(0.01)))
 model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_error])
 
-dqn = DQN(model, replay_size=25000, f_epsilon=50000, gamma=1.0)
+dqn = DQN(model, replay_size=50000, f_epsilon=250000, gamma=1.0)
 
 
 for i_episode in range(500000):
