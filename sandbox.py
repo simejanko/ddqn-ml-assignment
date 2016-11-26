@@ -1,7 +1,7 @@
 import threading
 import gym
 from keras.models import  Sequential
-from keras.layers import Dense, Activation, Convolution2D
+from keras.layers import Dense, Activation, Convolution2D, Flatten
 from keras.regularizers import l2
 from keras.optimizers import RMSprop
 from keras.metrics import mean_squared_error
@@ -13,7 +13,7 @@ from scipy.misc import imresize
 import numpy as np
 
 render = False
-def wait_input():
+"""def wait_input():
     global render
     with Input(keynames='curses') as input_generator:
         for e in input_generator:
@@ -21,7 +21,7 @@ def wait_input():
                 render = not render
 
 input_t = threading.Thread(target=wait_input)
-input_t.start()
+input_t.start()"""
 
 def rgb2gray(rgb):
     r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
@@ -63,16 +63,18 @@ model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_err
 
 #subsample=stride
 #dim_ordering='th' - zato da je depth 0. dimenzija
+#TODO: try Dropout
 env = gym.make('Pong-v0')
 model = Sequential()
 model.add(Convolution2D(16, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
 model.add(Convolution2D(32, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
 model.add(Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
-model.add(Dense(128, W_regularizer=l2(0.001)))
+model.add(Flatten())
+model.add(Dense(128, W_regularizer=l2(0.001), activation="relu"))
 model.add(Dense(env.action_space.n, W_regularizer=l2(0.001)))
 model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_error])
 
-dqn = DQN(model, replay_size=50000, f_epsilon=500000, gamma=0.95)
+dqn = DQN(model, replay_size=100, f_epsilon=500000, gamma=0.95)
 
 #preprocess_input(observation, 35,15, 84)
 for i_episode in range(5000000):
