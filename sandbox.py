@@ -60,7 +60,7 @@ model.add(Dense(8, W_regularizer=l2(0.001)))
 model.add(Activation("relu"))
 model.add(Dense(env.action_space.n, W_regularizer=l2(0.001)))
 model.compile(optimizer=RMSprop(lr=0.0005), loss='mse', metrics=[mean_squared_error])
-dqn = DDQN(model, replay_size=25000, f_epsilon=250000, gamma=1.0, hard_learn_interval=500, warmup=10000)
+dqn = DDQN(model, replay_size=30000, f_epsilon=500000, gamma=1.0, hard_learn_interval=1500, warmup=10000)
 
 #subsample=stride
 #dim_ordering='th' - zato da je depth 0. dimenzija
@@ -95,7 +95,7 @@ dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.95)"""
         o2 = o3
         o = o_n
         r_sum += reward
-    print("Episode {} finished with {} reward".format(i_episode, r_sum))"""
+    print("Episode {} ({} steps) finished with {} reward".format(i_episode, dqn.step, r_sum))"""
 
 
 for i_episode in range(5000000):

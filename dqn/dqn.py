@@ -1,6 +1,8 @@
 import numpy as np
 import random
 import copy
+import pickle
+import keras
 
 class ReplayMemory():
     """
@@ -23,6 +25,7 @@ class ReplayMemory():
         """
         return random.sample(self.memory, n)
 
+#TODO: test save/load
 class DDQN():
     def __init__(self, model, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=100000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000):
@@ -50,6 +53,24 @@ class DDQN():
         self.hard_learn_interval = hard_learn_interval
         self.warmup = warmup
         self.step = 1
+
+    def save(self, name):
+        #it isn't recommended to pickle keras models
+        self.model.save("{}.h5".format(name))
+        self.target_model.save("{}_target.h5".format(name))
+
+        odict = self.__dict__.copy()
+        del odict['model']
+        del odict['target_model']
+        with open("{}.pkl".format(name), 'wb') as file:
+            pickle.dump(odict, file)
+
+    def load(self, name):
+        with open('{}.pkl'.format(name), 'rb') as file:
+            self.__dict__ = pickle.load(file)
+
+        self.model = keras.models.load_model('{}.h5'.format(name))
+        self.target_model = keras.models.load_model('{}_target.h5'.format(name))
 
     def _modify_target(self, t, a, r, d, a_n, q_n):
         """
