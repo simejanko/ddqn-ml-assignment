@@ -66,15 +66,15 @@ model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_err
 #TODO: try Dropout
 env = gym.make('Pong-v0')
 model = Sequential()
-model.add(Convolution2D(16, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
-model.add(Convolution2D(32, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
-model.add(Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
+model.add(Convolution2D(8, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
+model.add(Convolution2D(16, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
+model.add(Convolution2D(16, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
 model.add(Flatten())
-model.add(Dense(128, W_regularizer=l2(0.001), activation="relu"))
+model.add(Dense(64, W_regularizer=l2(0.001), activation="relu"))
 model.add(Dense(env.action_space.n, W_regularizer=l2(0.001)))
 model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_error])
 
-dqn = DQN(model, replay_size=1000, f_epsilon=500000, gamma=0.95)
+dqn = DQN(model, replay_size=300000, f_epsilon=500000, gamma=0.95)
 
 #preprocess_input(observation, 35,15, 84)
 for i_episode in range(5000000):
