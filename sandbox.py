@@ -6,7 +6,7 @@ from keras.regularizers import l2
 from keras.optimizers import RMSprop
 from keras.metrics import mean_squared_error
 import gym_ple
-from dqn.dqn import DQN
+from dqn.dqn import DDQN
 from curtsies import Input
 import matplotlib.pyplot as plt
 from scipy.misc import imresize
@@ -52,19 +52,20 @@ for i in range(95000):
     observation, reward, done, _ = env.step(a)
     print("reward: %d" % reward)"""
 
-
-"""model = Sequential()
+env = gym.make('CartPole-v0')
+model = Sequential()
 model.add(Dense(20, input_shape=env.observation_space.shape , W_regularizer=l2(0.001)))
 model.add(Activation("relu"))
 model.add(Dense(8, W_regularizer=l2(0.001)))
 model.add(Activation("relu"))
 model.add(Dense(env.action_space.n, W_regularizer=l2(0.001)))
-model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_error])"""
+model.compile(optimizer=RMSprop(lr=0.0005), loss='mse', metrics=[mean_squared_error])
+dqn = DDQN(model, replay_size=25000, f_epsilon=250000, gamma=1.0, hard_learn_interval=500, warmup=10000)
 
 #subsample=stride
 #dim_ordering='th' - zato da je depth 0. dimenzija
 #TODO: try Dropout
-env = gym.make('Pong-v0')
+"""env = gym.make('Pong-v0')
 model = Sequential()
 model.add(Convolution2D(8, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
 model.add(Convolution2D(16, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
@@ -74,10 +75,10 @@ model.add(Dense(64, W_regularizer=l2(0.001), activation="relu"))
 model.add(Dense(env.action_space.n, W_regularizer=l2(0.001)))
 model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_error])
 
-dqn = DQN(model, replay_size=300000, f_epsilon=500000, gamma=0.95)
+dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.95)"""
 
 #preprocess_input(observation, 35,15, 84)
-for i_episode in range(5000000):
+"""for i_episode in range(5000000):
     print(dqn.epsilon)
     o1 = env.reset()
     o2 = env.step(env.action_space.sample())[0]
@@ -92,6 +93,24 @@ for i_episode in range(5000000):
         o_n = preprocess_input((o2, o3), 35, 15, 84)
         dqn.learning_step(o, action, reward, o_n, done)
         o2 = o3
+        o = o_n
+        r_sum += reward
+    print("Episode {} finished with {} reward".format(i_episode, r_sum))"""
+
+
+for i_episode in range(5000000):
+    print(dqn.epsilon)
+    o = env.reset()
+    done = False
+    r_sum = 0
+    while not done:
+        if render:
+            env.render()
+        action = dqn.predict(o)
+        o_n, reward, done, _ = env.step(action)
+        if done:
+            reward = -1
+        dqn.learning_step(o, action, reward, o_n, done)
         o = o_n
         r_sum += reward
     print("Episode {} finished with {} reward".format(i_episode, r_sum))

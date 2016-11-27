@@ -23,7 +23,7 @@ class ReplayMemory():
         """
         return random.sample(self.memory, n)
 
-class DQN():
+class DDQN():
     def __init__(self, model, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=100000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000):
         """
@@ -51,19 +51,23 @@ class DQN():
         self.warmup = warmup
         self.step = 1
 
-    def _modify_target(self, t, a, r, d, n_m):
+    def _modify_target(self, t, a, r, d, a_n, q_n):
+        """
+        Sets double Q-learning target.
+        """
         t[a] = r
         if not d:
-            t[a] += self.gamma * n_m
+            t[a] += self.gamma * q_n[a_n]
         return t
 
-    def predict(self, observation):
+    def predict(self, observation, use_epsilon=True):
         """
         Predicts next action with epsilon policy, given environment observation.
         :param observation: Numpy array with the same shape as input Keras layer.
+        :param use_epsilon: Enables/disables epsilon policy.
         """
 
-        if random.random() < self.epsilon or self.step <= self.warmup:
+        if use_epsilon and random.random() < self.epsilon or self.step <= self.warmup:
             return random.randint(0,self.n_actions-1)
 
         Q = self.model.predict_on_batch(np.expand_dims(observation, axis=0))[0]
@@ -71,7 +75,7 @@ class DQN():
 
     def learning_step(self, observation, action, reward, new_observation, done):
         """
-        Performs DQN learning step
+        Performs DDQN learning step
         :param observation: Observation before performing the action.
         :param action: Action performed.
         :param reward: Reward after performing the action.
@@ -90,9 +94,11 @@ class DQN():
 
             obs, actions, rewards, obs2, dones = map(np.array, zip(*experiences))
             targets = self.model.predict_on_batch(obs)
-            next_max = np.max(self.target_model.predict_on_batch(obs2), axis=1)
+            #double q learning target
+            a_next = np.argmax(self.model.predict_on_batch(obs2), axis=1)
+            Q_next = self.target_model.predict_on_batch(obs2)
             targets = np.array(
-                [self._modify_target(t, actions[i], rewards[i], dones[i], next_max[i]) for i, t in enumerate(targets)])
+                [self._modify_target(t, actions[i], rewards[i], dones[i], a_next[i], Q_next[i]) for i, t in enumerate(targets)])
 
             self.model.train_on_batch(obs, targets)
 
