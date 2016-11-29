@@ -59,7 +59,7 @@ class DDQN():
     def _get_propotional_priority(self, priority):
         return (priority + self.priority_epsilon)**self.priority_alpha
 
-    def _get_priority(self, t, a, r, a_n, q_n, d):
+    def _get_priority(self, t, a, r, d, a_n, q_n):
         priority = math.fabs(t[a] - self._get_target(r, a_n, q_n, d))
         return self._get_propotional_priority(priority)
 
@@ -108,7 +108,7 @@ class DDQN():
         """
         if self.step <= self.warmup:
             #we use reward as priority during warmup
-            priority = self._get_propotional_priority(reward)
+            priority = self._get_propotional_priority(math.fabs(reward))
             self.replay_memory.add(priority, (observation, action, reward, new_observation, done))
 
         else:
@@ -120,7 +120,7 @@ class DDQN():
             #We need to do a forward pass on latest_experience to gets it's priority.
             #It is not used for learning though.
             last_experience = (observation, action, reward, new_observation, done)
-            experiences.append(last_experience)
+            experiences += (last_experience, )
 
             obs, actions, rewards, obs2, dones = map(np.array, zip(*experiences))
             targets = self.model.predict_on_batch(obs)
@@ -138,8 +138,8 @@ class DDQN():
 
             #calculate new targets
             targets = np.array(
-                self._modify_target(t, actions[i], rewards[i], dones[i], a_next[i], Q_next[i])
-                for i, t in enumerate(targets))
+                [self._modify_target(t, actions[i], rewards[i], dones[i], a_next[i], Q_next[i])
+                for i, t in enumerate(targets)])
             #latest experience is excluded from training
             self.model.train_on_batch(obs[:-1], targets[:-1])
 

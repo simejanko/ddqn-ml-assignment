@@ -13,7 +13,7 @@ from scipy.misc import imresize
 import numpy as np
 
 render = False
-def wait_input():
+"""def wait_input():
     global render
     with Input(keynames='curses') as input_generator:
         for e in input_generator:
@@ -21,7 +21,7 @@ def wait_input():
                 render = not render
 
 input_t = threading.Thread(target=wait_input)
-input_t.start()
+input_t.start()"""
 
 def rgb2gray(rgb):
     r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
