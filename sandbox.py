@@ -13,7 +13,7 @@ from scipy.misc import imresize
 import numpy as np
 
 render = False
-"""def wait_input():
+def wait_input():
     global render
     with Input(keynames='curses') as input_generator:
         for e in input_generator:
@@ -21,7 +21,7 @@ render = False
                 render = not render
 
 input_t = threading.Thread(target=wait_input)
-input_t.start()"""
+input_t.start()
 
 def rgb2gray(rgb):
     r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
@@ -39,46 +39,30 @@ def preprocess_input(images , cut_u, cut_d, h):
     #plt.imshow(image, cmap='gray')
     #plt.show()
 
-#TODO: every atari game has 6 action_space. Maybe try filtering. For example pong 3 possible actions: wait,up,down.
-"""env = gym.make('Pong-v0')
-observation = env.reset()
-for i in range(95000):
-    preprocess_input(observation, 35,15, 84)
-    a = input()
-    if not a:
-        a = env.action_space.sample()
-    else:
-        a = int(a)
-    observation, reward, done, _ = env.step(a)
-    print("reward: %d" % reward)"""
-
-env = gym.make('CartPole-v0')
-model = Sequential()
-model.add(Dense(20, input_shape=env.observation_space.shape , W_regularizer=l2(0.001)))
-model.add(Activation("relu"))
-model.add(Dense(8, W_regularizer=l2(0.001)))
-model.add(Activation("relu"))
-model.add(Dense(env.action_space.n, W_regularizer=l2(0.001)))
-model.compile(optimizer=RMSprop(lr=0.0025), loss='mse', metrics=[mean_squared_error])
-dqn = DDQN(model, replay_size=30000, f_epsilon=250000, gamma=1.0, hard_learn_interval=500, warmup=10000)
-
 #subsample=stride
 #dim_ordering='th' - zato da je depth 0. dimenzija
 #TODO: try Dropout
-"""env = gym.make('Pong-v0')
+#TODO: every atari game has 6 action_space. Maybe try filtering. For example pong 3 possible actions: wait,up,down.
+
+env = gym.make('Pong-v0')
 model = Sequential()
-model.add(Convolution2D(8, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
-model.add(Convolution2D(16, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
-model.add(Convolution2D(16, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
+model.add(Convolution2D(16, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
+model.add(Convolution2D(32, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
+#model.add(Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
 model.add(Flatten())
 model.add(Dense(64, W_regularizer=l2(0.001), activation="relu"))
-model.add(Dense(env.action_space.n, W_regularizer=l2(0.001)))
-model.compile(optimizer=RMSprop(lr=0.001), loss='mse', metrics=[mean_squared_error])
+model.add(Dense(env.action_space.n, W_regularizer=l2(0.001), activation="linear"))
+model.compile(optimizer=RMSprop(lr=0.0003), loss='mse', metrics=[mean_squared_error])
 
-dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.95)"""
+dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.99)
 
+r_sums = []
 #preprocess_input(observation, 35,15, 84)
-"""for i_episode in range(5000000):
+for i_episode in range(5000000):
+    if len(r_sums)==100:
+        with open("log.txt","a") as log:
+            log.write("%f\n" % (sum(r_sums)/100))
+            r_sums = []
     print(dqn.epsilon)
     o1 = env.reset()
     o2 = env.step(env.action_space.sample())[0]
@@ -95,10 +79,25 @@ dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.95)"""
         o2 = o3
         o = o_n
         r_sum += reward
-    print("Episode {} ({} steps) finished with {} reward".format(i_episode, dqn.step, r_sum))"""
+    r_sums.append(r_sum)
+    print("Episode {} ({} steps) finished with {} reward".format(i_episode, dqn.step, r_sum))
 
 
-for i_episode in range(5000000):
+
+
+
+
+"""env = gym.make('CartPole-v0')
+model = Sequential()
+model.add(Dense(20, input_shape=env.observation_space.shape , W_regularizer=l2(0.001)))
+model.add(Activation("relu"))
+model.add(Dense(8, W_regularizer=l2(0.001)))
+model.add(Activation("relu"))
+model.add(Dense(env.action_space.n, W_regularizer=l2(0.001)))
+model.compile(optimizer=RMSprop(lr=0.0025), loss='mse', metrics=[mean_squared_error])
+dqn = DDQN(model, replay_size=30000, f_epsilon=250000, gamma=1.0, hard_learn_interval=500, warmup=10000)"""
+
+"""for i_episode in range(5000000):
     print(dqn.epsilon)
     o = env.reset()
     done = False
@@ -113,4 +112,4 @@ for i_episode in range(5000000):
         dqn.learning_step(o, action, reward, o_n, done)
         o = o_n
         r_sum += reward
-    print("Episode {} finished with {} reward".format(i_episode, r_sum))
+    print("Episode {} finished with {} reward".format(i_episode, r_sum))"""
