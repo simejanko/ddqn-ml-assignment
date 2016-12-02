@@ -8,6 +8,15 @@ import math
 
 #TODO: test save/load
 class DDQN():
+    @staticmethod
+    def load(name):
+        with open('{}.pkl'.format(name), 'rb') as file:
+            dqn = pickle.load(file)
+
+        dqn.model = keras.models.load_model('{}.h5'.format(name))
+        dqn.target_model = keras.models.load_model('{}_target.h5'.format(name))
+        return dqn
+
     def __init__(self, model, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=100000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000,
                  priority_epsilon=0.01, priority_alpha=0.6):
@@ -73,14 +82,8 @@ class DDQN():
         #del odict['model']
         #del odict['target_model']
         with open("{}.pkl".format(name), 'wb') as file:
-            pickle.dump(self.__dict__, file)
+            pickle.dump(self, file)
 
-    def load(self, name):
-        with open('{}.pkl'.format(name), 'rb') as file:
-            self.__dict__ = pickle.load(file)
-
-        self.model = keras.models.load_model('{}.h5'.format(name))
-        self.target_model = keras.models.load_model('{}_target.h5'.format(name))
 
     def predict(self, observation, use_epsilon=True):
         """
