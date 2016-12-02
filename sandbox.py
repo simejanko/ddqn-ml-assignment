@@ -20,6 +20,7 @@ def wait_input():
             if e == 'r':
                 render = not render
 
+
 input_t = threading.Thread(target=wait_input)
 input_t.start()
 
@@ -43,27 +44,29 @@ def preprocess_input(images , cut_u, cut_d, h):
 #dim_ordering='th' - zato da je depth 0. dimenzija
 #TODO: try Dropout
 #TODO: every atari game has 6 action_space. Maybe try filtering. For example pong 3 possible actions: wait,up,down.
-
+#TODO: refactor sandbox
+open("log.txt","w").close()
 env = gym.make('Pong-v0')
 model = Sequential()
-model.add(Convolution2D(16, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
-model.add(Convolution2D(32, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
-#model.add(Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', W_regularizer=l2(0.001), dim_ordering='th'))
+model.add(Convolution2D(16, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.0001), dim_ordering='th'))
+model.add(Convolution2D(32, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.0001), dim_ordering='th'))
+model.add(Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', W_regularizer=l2(0.0001), dim_ordering='th'))
 model.add(Flatten())
-model.add(Dense(64, W_regularizer=l2(0.001), activation="relu"))
-model.add(Dense(env.action_space.n, W_regularizer=l2(0.001), activation="linear"))
+model.add(Dense(64, W_regularizer=l2(0.0001), activation="relu"))
+model.add(Dense(env.action_space.n, W_regularizer=l2(0.0001), activation="linear"))
 model.compile(optimizer=RMSprop(lr=0.0003), loss='mse', metrics=[mean_squared_error])
 
-dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.99)
+dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.99, warmup=100000)
 
 r_sums = []
 #preprocess_input(observation, 35,15, 84)
 for i_episode in range(5000000):
-    if len(r_sums)==100:
+    if len(r_sums)==50:
         with open("log.txt","a") as log:
-            log.write("%f\n" % (sum(r_sums)/100))
+            log.write("%f\n" % (sum(r_sums)/len(r_sums)))
             r_sums = []
-    print(dqn.epsilon)
+            dqn.save("dqn_model")
+
     o1 = env.reset()
     o2 = env.step(env.action_space.sample())[0]
     o = preprocess_input((o1, o2), 35, 15, 84)
@@ -81,6 +84,7 @@ for i_episode in range(5000000):
         r_sum += reward
     r_sums.append(r_sum)
     print("Episode {} ({} steps) finished with {} reward".format(i_episode, dqn.step, r_sum))
+    print("Epsilon:%f" % dqn.epsilon)
 
 
 

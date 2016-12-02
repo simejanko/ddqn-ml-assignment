@@ -69,11 +69,11 @@ class DDQN():
         self.model.save("{}.h5".format(name))
         self.target_model.save("{}_target.h5".format(name))
 
-        odict = self.__dict__.copy()
-        del odict['model']
-        del odict['target_model']
+        #odict = self.__dict__.copy()
+        #del odict['model']
+        #del odict['target_model']
         with open("{}.pkl".format(name), 'wb') as file:
-            pickle.dump(odict, file)
+            pickle.dump(self.__dict__, file)
 
     def load(self, name):
         with open('{}.pkl'.format(name), 'rb') as file:
