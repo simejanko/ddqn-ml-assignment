@@ -66,6 +66,7 @@ for i_episode in range(5000000):
             log.write("%f\n" % (sum(r_sums)/len(r_sums)))
             r_sums = []
             dqn.save("dqn_model")
+            dqn.save("models/dqn_model_%d" % i_episode, only_model=True)
 
     o1 = env.reset()
     o2 = env.step(env.action_space.sample())[0]

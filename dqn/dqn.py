@@ -73,21 +73,23 @@ class DDQN():
         return self._get_propotional_priority(priority)
 
 
-    def save(self, name):
+    def save(self, name, only_model=False):
         #it isn't recommended to pickle keras models
         self.model.save("{}.h5".format(name))
-        self.target_model.save("{}_target.h5".format(name))
 
-        model_tmp = self.model
-        target_model_tmp = self.target_model
+        if not only_model:
+            self.target_model.save("{}_target.h5".format(name))
 
-        self.model = None
-        self.target_model = None
-        with open("{}.pkl".format(name), 'wb') as file:
-            pickle.dump(self, file)
+            model_tmp = self.model
+            target_model_tmp = self.target_model
 
-        self.model = model_tmp
-        self.target_model = target_model_tmp
+            self.model = None
+            self.target_model = None
+            with open("{}.pkl".format(name), 'wb') as file:
+                pickle.dump(self, file)
+
+            self.model = model_tmp
+            self.target_model = target_model_tmp
 
 
     def predict(self, observation, use_epsilon=True):
