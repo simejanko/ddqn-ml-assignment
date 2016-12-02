@@ -78,11 +78,16 @@ class DDQN():
         self.model.save("{}.h5".format(name))
         self.target_model.save("{}_target.h5".format(name))
 
-        #odict = self.__dict__.copy()
-        #del odict['model']
-        #del odict['target_model']
+        model_tmp = self.model
+        target_model_tmp = self.target_model
+
+        self.model = None
+        self.target_model = None
         with open("{}.pkl".format(name), 'wb') as file:
             pickle.dump(self, file)
+
+        self.model = model_tmp
+        self.target_model = target_model_tmp
 
 
     def predict(self, observation, use_epsilon=True):
