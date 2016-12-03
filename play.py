@@ -25,7 +25,7 @@ def preprocess_input(images , cut_u, cut_d, h):
     #plt.show()
 
 env = gym.make('Pong-v0')
-dqn = DDQN.load('models/dq_model_450', only_model=True)
+dqn = DDQN.load('models/dqn_model_450', only_model=True)
 
 #preprocess_input(observation, 35,15, 84)
 for i_episode in range(5000000):

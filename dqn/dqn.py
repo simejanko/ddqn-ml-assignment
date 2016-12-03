@@ -12,7 +12,7 @@ class DDQN():
     def load(name, only_model = False):
         model = keras.models.load_model('{}.h5'.format(name))
         if only_model:
-            dqn = DDQN(model)
+            dqn = DDQN(model, only_model=True)
         else:
             with open('{}.pkl'.format(name), 'rb') as file:
                 dqn = pickle.load(file)
@@ -23,7 +23,7 @@ class DDQN():
 
     def __init__(self, model, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=100000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000,
-                 priority_epsilon=0.01, priority_alpha=0.6):
+                 priority_epsilon=0.01, priority_alpha=0.6, only_model=False):
         """
         :param model: Keras neural network model.
         :param replay_size: Size of experience replay memory.
@@ -39,18 +39,20 @@ class DDQN():
         """
 
         self.model = model
-        self.target_model = copy.deepcopy(model)
-        self.n_actions = model.layers[-1].output_shape[1]
-        self.replay_memory = SumTree(replay_size)
         self.epsilon = s_epsilon
-        self.e_epsilon = e_epsilon
-        self.d_epsilon = (e_epsilon - s_epsilon) / f_epsilon
-        self.batch_size = batch_size
-        self.gamma = gamma
-        self.hard_learn_interval = hard_learn_interval
-        self.warmup = warmup
-        self.priority_epsilon = priority_epsilon
-        self.priority_alpha = priority_alpha
+        self.warmup = 0
+        if not only_model:
+            self.target_model = copy.deepcopy(model)
+            self.n_actions = model.layers[-1].output_shape[1]
+            self.replay_memory = SumTree(replay_size)
+            self.e_epsilon = e_epsilon
+            self.d_epsilon = (e_epsilon - s_epsilon) / f_epsilon
+            self.batch_size = batch_size
+            self.gamma = gamma
+            self.hard_learn_interval = hard_learn_interval
+            self.warmup = warmup
+            self.priority_epsilon = priority_epsilon
+            self.priority_alpha = priority_alpha
         self.step = 1
 
     def _get_target(self, r, a_n, q_n, d):
@@ -103,7 +105,7 @@ class DDQN():
         :param use_epsilon: Enables/disables epsilon policy.
         """
 
-        if use_epsilon and random.random() < self.epsilon or self.step <= self.warmup:
+        if use_epsilon and (random.random() < self.epsilon or self.step <= self.warmup):
             return random.randint(0,self.n_actions-1)
 
         Q = self.model.predict_on_batch(np.expand_dims(observation, axis=0))[0]
