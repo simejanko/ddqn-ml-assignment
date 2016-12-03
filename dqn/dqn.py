@@ -1,12 +1,13 @@
 import numpy as np
 import random
 import copy
-import pickle
+import dill
 import keras
 from dqn.sum_tree import SumTree
 import math
 
 #TODO: test save/load
+#TODO: refactor only_model
 class DDQN():
     @staticmethod
     def load(name, only_model = False):
@@ -15,7 +16,7 @@ class DDQN():
             dqn = DDQN(model, only_model=True)
         else:
             with open('{}.pkl'.format(name), 'rb') as file:
-                dqn = pickle.load(file)
+                dqn = dill.load(file)
             dqn.model = model
             dqn.target_model = keras.models.load_model('{}_target.h5'.format(name))
 
@@ -92,7 +93,7 @@ class DDQN():
             self.model = None
             self.target_model = None
             with open("{}.pkl".format(name), 'wb') as file:
-                pickle.dump(self, file)
+                dill.dump(self, file)
 
             self.model = model_tmp
             self.target_model = target_model_tmp

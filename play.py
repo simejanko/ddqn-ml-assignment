@@ -1,13 +1,10 @@
-import threading
 import gym
-import keras
-import gym_ple
 from dqn.dqn import DDQN
-from curtsies import Input
-import matplotlib.pyplot as plt
 from scipy.misc import imresize
 import numpy as np
+import time
 
+#TODO: implement these somewhere better (utils inside dqn package?)
 def rgb2gray(rgb):
     r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
     gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
@@ -41,3 +38,4 @@ for i_episode in range(5000000):
         o_n = preprocess_input((o2, o3), 35, 15, 84)
         o2 = o3
         o = o_n
+        time.sleep(0.05)
