@@ -9,12 +9,16 @@ import math
 #TODO: test save/load
 class DDQN():
     @staticmethod
-    def load(name):
-        with open('{}.pkl'.format(name), 'rb') as file:
-            dqn = pickle.load(file)
+    def load(name, only_model = False):
+        model = keras.models.load_model('{}.h5'.format(name))
+        if only_model:
+            dqn = DDQN(model)
+        else:
+            with open('{}.pkl'.format(name), 'rb') as file:
+                dqn = pickle.load(file)
+            dqn.model = model
+            dqn.target_model = keras.models.load_model('{}_target.h5'.format(name))
 
-        dqn.model = keras.models.load_model('{}.h5'.format(name))
-        dqn.target_model = keras.models.load_model('{}_target.h5'.format(name))
         return dqn
 
     def __init__(self, model, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,

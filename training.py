@@ -54,7 +54,7 @@ model.add(Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activati
 model.add(Flatten())
 model.add(Dense(64, W_regularizer=l2(0.0001), activation="relu"))
 model.add(Dense(env.action_space.n, W_regularizer=l2(0.0001), activation="linear"))
-model.compile(optimizer=RMSprop(lr=0.0003), loss='mse', metrics=[mean_squared_error])
+model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
 
 dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.99, warmup=100000)
 
@@ -65,7 +65,7 @@ for i_episode in range(5000000):
         with open("log.txt","a") as log:
             log.write("%f\n" % (sum(r_sums)/len(r_sums)))
             r_sums = []
-            dqn.save("dqn_model")
+            #dqn.save("dqn_model")
             dqn.save("models/dqn_model_%d" % i_episode, only_model=True)
 
     o1 = env.reset()
