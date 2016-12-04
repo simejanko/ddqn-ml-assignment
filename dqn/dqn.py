@@ -93,7 +93,6 @@ class DDQN():
             self.model = None
             self.target_model = None
             p = pickle.Pickler(open("{}.pkl".format(name), "wb"))
-            p.fast = True
             p.dump(self)
 
             self.model = model_tmp

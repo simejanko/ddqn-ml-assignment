@@ -11,6 +11,7 @@ from curtsies import Input
 import matplotlib.pyplot as plt
 from scipy.misc import imresize
 import numpy as np
+import os
 
 render = False
 """def wait_input():
@@ -45,22 +46,27 @@ def preprocess_input(images , cut_u, cut_d, h):
 #TODO: try Dropout
 #TODO: every atari game has 6 action_space. Maybe try filtering. For example pong 3 possible actions: wait,up,down.
 #TODO: refactor sandbox
-open("log.txt","w").close()
 env = gym.make('Pong-v0')
-model = Sequential()
-model.add(Convolution2D(16, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.00001), dim_ordering='th'))
-model.add(Convolution2D(32, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.00001), dim_ordering='th'))
-model.add(Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', W_regularizer=l2(0.00001), dim_ordering='th'))
-model.add(Flatten())
-model.add(Dense(64, W_regularizer=l2(0.00001), activation="relu"))
-model.add(Dense(env.action_space.n, W_regularizer=l2(0.00001), activation="linear"))
-model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
+if os.path.isfile('dqn_model.pkl'):
+    dqn = DDQN.load('dqn_model')
+    i_episode = max([int(os.path.splitext(file)[0].split("_")[-1]) for file in os.listdir('models')])
+else:
+    open("log.txt","w").close()
+    model = Sequential()
+    model.add(Convolution2D(16, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.00001), dim_ordering='th'))
+    model.add(Convolution2D(32, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.00001), dim_ordering='th'))
+    model.add(Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', W_regularizer=l2(0.00001), dim_ordering='th'))
+    model.add(Flatten())
+    model.add(Dense(64, W_regularizer=l2(0.00001), activation="relu"))
+    model.add(Dense(env.action_space.n, W_regularizer=l2(0.00001), activation="linear"))
+    model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
 
-dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.99, warmup=300000)
+    dqn = DDQN(model, replay_size=150000, f_epsilon=500000, gamma=0.99, warmup=100000)
+    i_episode = 0
 
 r_sums = []
 #preprocess_input(observation, 35,15, 84)
-for i_episode in range(5000000):
+while i_episode < 5000000:
     if len(r_sums)==50:
         with open("log.txt","a") as log:
             log.write("%f\n" % (sum(r_sums)/len(r_sums)))
@@ -86,6 +92,8 @@ for i_episode in range(5000000):
     r_sums.append(r_sum)
     print("Episode {} ({} steps) finished with {} reward".format(i_episode, dqn.step, r_sum))
     print("Epsilon:%f" % dqn.epsilon)
+
+    i_episode += 1
 
 
 
