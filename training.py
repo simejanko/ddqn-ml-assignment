@@ -13,7 +13,7 @@ from scipy.misc import imresize
 import numpy as np
 
 render = False
-def wait_input():
+"""def wait_input():
     global render
     with Input(keynames='curses') as input_generator:
         for e in input_generator:
@@ -22,7 +22,7 @@ def wait_input():
 
 
 input_t = threading.Thread(target=wait_input)
-input_t.start()
+input_t.start()"""
 
 def rgb2gray(rgb):
     r, g, b = rgb[:,:,0], rgb[:,:,1], rgb[:,:,2]
@@ -48,15 +48,15 @@ def preprocess_input(images , cut_u, cut_d, h):
 open("log.txt","w").close()
 env = gym.make('Pong-v0')
 model = Sequential()
-model.add(Convolution2D(16, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.0001), dim_ordering='th'))
-model.add(Convolution2D(32, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.0001), dim_ordering='th'))
-model.add(Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', W_regularizer=l2(0.0001), dim_ordering='th'))
+model.add(Convolution2D(16, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.00001), dim_ordering='th'))
+model.add(Convolution2D(32, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.00001), dim_ordering='th'))
+model.add(Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', W_regularizer=l2(0.00001), dim_ordering='th'))
 model.add(Flatten())
-model.add(Dense(64, W_regularizer=l2(0.0001), activation="relu"))
-model.add(Dense(env.action_space.n, W_regularizer=l2(0.0001), activation="linear"))
+model.add(Dense(64, W_regularizer=l2(0.00001), activation="relu"))
+model.add(Dense(env.action_space.n, W_regularizer=l2(0.00001), activation="linear"))
 model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
 
-dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.99, warmup=100000)
+dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.99, warmup=300000)
 
 r_sums = []
 #preprocess_input(observation, 35,15, 84)
@@ -65,7 +65,7 @@ for i_episode in range(5000000):
         with open("log.txt","a") as log:
             log.write("%f\n" % (sum(r_sums)/len(r_sums)))
             r_sums = []
-            #dqn.save("dqn_model")
+            dqn.save("dqn_model")
             dqn.save("models/dqn_model_%d" % i_episode, only_model=True)
 
     o1 = env.reset()
