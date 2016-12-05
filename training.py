@@ -11,6 +11,7 @@ from dqn import utils
 import numpy as np
 import os
 
+MODELS_DIR = 'models'
 render = False
 """def wait_input():
     global render
@@ -30,7 +31,7 @@ input_t.start()"""
 env = gym.make('Pong-v0')
 if os.path.isfile('dqn_model.pkl'):
     dqn = DDQN.load('dqn_model')
-    i_episode = max([int(os.path.splitext(file)[0].split("_")[-1]) for file in os.listdir('models')])
+    i_episode = max([int(os.path.splitext(file)[0].split("_")[-1]) for file in os.listdir(MODELS_DIR)])
 else:
     open("log.txt","w").close()
 
@@ -56,7 +57,7 @@ while i_episode < 5000000:
             log.write("%f\n" % (sum(r_sums)/len(r_sums)))
             r_sums = []
             dqn.save("dqn_model")
-            dqn.save("models/dqn_model_%d" % i_episode, only_model=True)
+            dqn.save("%s/dqn_model_%d" % (MODELS_DIR, i_episode), only_model=True)
 
     o1 = env.reset()
     o2 = env.step(env.action_space.sample())[0]
