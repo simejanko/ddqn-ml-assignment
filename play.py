@@ -7,8 +7,7 @@ from dqn import utils
 env = gym.make('Pong-v0')
 dqn = DDQN.load('models/dqn_model_450', only_model=True)
 
-#preprocess_input(observation, 35,15, 84)
-for i_episode in range(5000000):
+while True:
     o1 = env.reset()
     o2 = env.step(env.action_space.sample())[0]
     o = utils.preprocess_input((o1, o2), 35, 15, 84)

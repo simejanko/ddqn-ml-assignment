@@ -23,8 +23,7 @@ render = False
 input_t = threading.Thread(target=wait_input)
 input_t.start()"""
 
-#subsample=stride
-#dim_ordering='th' - zato da je depth 0. dimenzija
+
 #TODO: try Dropout
 #TODO: every atari game has 6 action_space. Maybe try filtering. For example pong 3 possible actions: wait,up,down.
 #TODO: refactor sandbox
@@ -34,6 +33,9 @@ if os.path.isfile('dqn_model.pkl'):
     i_episode = max([int(os.path.splitext(file)[0].split("_")[-1]) for file in os.listdir('models')])
 else:
     open("log.txt","w").close()
+
+    # subsample=stride
+    # dim_ordering='th' - zato da je depth 0. dimenzija
     model = Sequential()
     model.add(Convolution2D(16, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', W_regularizer=l2(0.00001), dim_ordering='th'))
     model.add(Convolution2D(32, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', W_regularizer=l2(0.00001), dim_ordering='th'))

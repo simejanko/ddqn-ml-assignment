@@ -6,14 +6,13 @@ import keras
 from dqn.sum_tree import SumTree
 import math
 
-#TODO: test save/load
 #TODO: refactor only_model
 class DDQN():
     @staticmethod
     def load(name, only_model = False):
         model = keras.models.load_model('{}.h5'.format(name))
         if only_model:
-            dqn = DDQN(model, only_model=True)
+            dqn = DDQN(model, use_target=False)
         else:
             with open('{}.pkl'.format(name), 'rb') as file:
                 dqn = pickle.load(file)
@@ -22,11 +21,12 @@ class DDQN():
 
         return dqn
 
-    def __init__(self, model, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
+    def __init__(self, model, use_target=True, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=100000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000,
-                 priority_epsilon=0.01, priority_alpha=0.6, only_model=False):
+                 priority_epsilon=0.01, priority_alpha=0.6):
         """
         :param model: Keras neural network model.
+        :param use_target: Use target model or not.
         :param replay_size: Size of experience replay memory.
         :param s_epsilon: Start epsilon for Q-learning.
         :param e_epsilon: End epsilon for Q-learning.
@@ -40,20 +40,21 @@ class DDQN():
         """
 
         self.model = model
-        self.epsilon = s_epsilon
-        self.warmup = 0
-        if not only_model:
+        if use_target:
             self.target_model = copy.deepcopy(model)
-            self.n_actions = model.layers[-1].output_shape[1]
-            self.replay_memory = SumTree(replay_size)
-            self.e_epsilon = e_epsilon
-            self.d_epsilon = (e_epsilon - s_epsilon) / f_epsilon
-            self.batch_size = batch_size
-            self.gamma = gamma
-            self.hard_learn_interval = hard_learn_interval
-            self.warmup = warmup
-            self.priority_epsilon = priority_epsilon
-            self.priority_alpha = priority_alpha
+        else:
+            self.target_model = model
+        self.n_actions = model.layers[-1].output_shape[1]
+        self.replay_memory = SumTree(replay_size)
+        self.epsilon = s_epsilon
+        self.e_epsilon = e_epsilon
+        self.d_epsilon = (e_epsilon - s_epsilon) / f_epsilon
+        self.batch_size = batch_size
+        self.gamma = gamma
+        self.hard_learn_interval = hard_learn_interval
+        self.warmup = warmup
+        self.priority_epsilon = priority_epsilon
+        self.priority_alpha = priority_alpha
         self.step = 1
 
     def _get_target(self, r, a_n, q_n, d):
