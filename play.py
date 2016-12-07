@@ -17,17 +17,20 @@ for file in os.listdir(MODELS_DIR):
 
     dqns.append((i_episode, dqn))
 
-_, dqns = zip(*sorted(dqns))
+episodes, dqns = zip(*sorted(dqns))
 
 i_model = 0
 def wait_input():
     global i_model
+    global episodes
     with Input(keynames='curses') as input_generator:
         for e in input_generator:
             if e == '+':
                 i_model += 1
+                print(episodes[i_model])
             elif e == '-':
                 i_model -= 1
+                print(episodes[i_model])
 
 
 input_t = threading.Thread(target=wait_input)

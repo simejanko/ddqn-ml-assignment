@@ -1,14 +1,42 @@
-#Slightly modified version of: https://github.com/jaara/AI-blog/blob/master/SumTree.py
-
+#Modified version of: https://github.com/jaara/AI-blog/blob/master/SumTree.py
 import numpy
+import pickle
 
 class SumTree:
     write = 0
+
+    @staticmethod
+    def load_by_chunks(file):
+        """
+        Loads SumTree that was pickled by chunks.
+        :param file: File object.
+        """
+        sum_tree = pickle.load(file)
+
 
     def __init__(self, capacity):
         self.capacity = capacity
         self.tree = numpy.zeros( 2*capacity - 1 )
         self.data = numpy.zeros( capacity, dtype=object )
+
+    def save_by_chunks(self, file, chunk_size=1000):
+        """
+        Pickles SumTree by chunks. Slower but uses less memory.
+        :param file: File object.
+        :param chunk_size: Size of a single chunk.
+        """
+        data_temp = self.data
+        self.data = None
+
+        pickle.dump(self, file)
+        self.data = data_temp
+
+        for i in range(0, self.data.size, chunk_size):
+            end_i = i+chunk_size
+            if end_i > self.data.size-1:
+                end_i = self.data.size-1
+
+            pickle.dump(self.data[i:end_i], file)
 
     def _propagate(self, idx, change):
         parent = (idx - 1) // 2
