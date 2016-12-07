@@ -1,5 +1,6 @@
 #Modified version of: https://github.com/jaara/AI-blog/blob/master/SumTree.py
 import numpy
+import numpy as np
 import pickle
 
 class SumTree:
@@ -12,7 +13,15 @@ class SumTree:
         :param file: File object.
         """
         sum_tree = pickle.load(file)
+        sum_tree.data = pickle.load(file)
+        #sum_tree.data = numpy.zeros( sum_tree.capacity, dtype=object )
+        while True:
+            try:
+                np.append(sum_tree.data, pickle.load(file))
+            except EOFError:
+                break;
 
+        return sum_tree
 
     def __init__(self, capacity):
         self.capacity = capacity
