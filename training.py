@@ -46,7 +46,7 @@ else:
     model.add(Dense(env.action_space.n,  activation="linear"))
     model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
 
-    dqn = DDQN(model, replay_size=200000, f_epsilon=500000, gamma=0.995, warmup=100000)
+    dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.995, warmup=300000)
     i_episode = 0
 
 r_sums = []

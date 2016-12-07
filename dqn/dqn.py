@@ -16,6 +16,8 @@ class DDQN():
         else:
             with open('{}.pkl'.format(name), 'rb') as file:
                 dqn = pickle.load(file)
+                dqn.replay_memory = SumTree.load_by_chunks(file)
+
             dqn.model = model
             dqn.target_model = keras.models.load_model('{}_target.h5'.format(name))
 
@@ -82,7 +84,7 @@ class DDQN():
 
 
     def save(self, name, only_model=False):
-        #it isn't recommended to pickle keras models
+        #it isn't recommended to pickle keras models. We don't pickle replay memory because of memory issues.
         self.model.save("{}.h5".format(name))
 
         if not only_model:
@@ -90,14 +92,18 @@ class DDQN():
 
             model_tmp = self.model
             target_model_tmp = self.target_model
+            replay_memory_tmp = self.replay_memory
 
             self.model = None
             self.target_model = None
+            self.replay_memory = None
             with open("{}.pkl".format(name), "wb") as file:
                 pickle.dump(self, file)
+                replay_memory_tmp.save_by_chunks(file)
 
             self.model = model_tmp
             self.target_model = target_model_tmp
+            self.replay_memory = replay_memory_tmp
 
 
     def predict(self, observation, use_epsilon=True):
