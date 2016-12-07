@@ -17,9 +17,9 @@ class SumTree:
         #sum_tree.data = numpy.zeros( sum_tree.capacity, dtype=object )
         while True:
             try:
-                np.append(sum_tree.data, pickle.load(file))
+                sum_tree.data = np.append(sum_tree.data, pickle.load(file))
             except EOFError:
-                break;
+                break
 
         return sum_tree
 
@@ -28,7 +28,7 @@ class SumTree:
         self.tree = numpy.zeros( 2*capacity - 1 )
         self.data = numpy.zeros( capacity, dtype=object )
 
-    def save_by_chunks(self, file, chunk_size=1000):
+    def save_by_chunks(self, file, chunk_size=2000):
         """
         Pickles SumTree by chunks. Slower but uses less memory.
         :param file: File object.
