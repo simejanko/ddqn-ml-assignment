@@ -33,7 +33,8 @@ if os.path.isfile('dqn_model.pkl'):
     dqn = DDQN.load('dqn_model')
     i_episode = max([int(os.path.splitext(file)[0].split("_")[-1]) for file in os.listdir(MODELS_DIR)])
 else:
-    open("log.txt","w").close()
+    with open("log.txt","w") as file:
+        file.write("steps\taverage reward\n")
 
     # subsample=stride
     # dim_ordering='th' - zato da je depth 0. dimenzija
@@ -47,12 +48,12 @@ else:
     model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
 
     dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.995, warmup=100000)
-    i_episode = 0
+    i_episode = 1
 
 r_sums = []
 #preprocess_input(observation, 35,15, 84)
 while i_episode < 5000000:
-    if (i_episode+1) % 50 == 0:
+    if i_episode % 50 == 0:
         dqn.save("dqn_model")
         dqn.save("%s/dqn_model_%d" % (MODELS_DIR, i_episode), only_model=True)
 
@@ -80,7 +81,7 @@ while i_episode < 5000000:
     print("Epsilon:%f" % dqn.epsilon)
 
     with open("log.txt", "a") as log:
-        log.write("%f\n" % (sum(r_sums) / len(r_sums)))
+        log.write("%d\t%f\n" % (dqn.step, sum(r_sums) / len(r_sums)))
 
     i_episode += 1
 
