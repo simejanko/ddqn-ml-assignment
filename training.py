@@ -52,12 +52,9 @@ else:
 r_sums = []
 #preprocess_input(observation, 35,15, 84)
 while i_episode < 5000000:
-    if len(r_sums)==50:
-        with open("log.txt","a") as log:
-            log.write("%f\n" % (sum(r_sums)/len(r_sums)))
-            r_sums = []
-            dqn.save("dqn_model")
-            dqn.save("%s/dqn_model_%d" % (MODELS_DIR, i_episode), only_model=True)
+    if (i_episode+1) % 50 == 0:
+        dqn.save("dqn_model")
+        dqn.save("%s/dqn_model_%d" % (MODELS_DIR, i_episode), only_model=True)
 
     o1 = env.reset()
     o2 = env.step(env.action_space.sample())[0]
@@ -74,9 +71,16 @@ while i_episode < 5000000:
         o2 = o3
         o = o_n
         r_sum += reward
+
     r_sums.append(r_sum)
+    if(len(r_sums) > 50):
+        del r_sums[0]
+
     print("Episode {} ({} steps) finished with {} reward".format(i_episode, dqn.step, r_sum))
     print("Epsilon:%f" % dqn.epsilon)
+
+    with open("log.txt", "a") as log:
+        log.write("%f\n" % (sum(r_sums) / len(r_sums)))
 
     i_episode += 1
 
