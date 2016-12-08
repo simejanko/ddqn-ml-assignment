@@ -42,8 +42,8 @@ class SumTree:
 
         for i in range(0, self.data.size, chunk_size):
             end_i = i+chunk_size
-            if end_i > self.data.size-1:
-                end_i = self.data.size-1
+            if end_i > self.data.size:
+                end_i = self.data.size
 
             pickle.dump(self.data[i:end_i], file)
 
