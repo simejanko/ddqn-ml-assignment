@@ -50,11 +50,10 @@ else:
     dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.995, warmup=100000)
     i_episode = 1
 
-r_sums = []
 log_batch=""
 #preprocess_input(observation, 35,15, 84)
 while i_episode < 5000000:
-    if i_episode % 50 == 0:
+    if i_episode % 25 == 0:
         dqn.save("dqn_model")
         dqn.save("%s/dqn_model_%d" % (MODELS_DIR, i_episode), only_model=True)
 
@@ -78,14 +77,10 @@ while i_episode < 5000000:
         o = o_n
         r_sum += reward
 
-    r_sums.append(r_sum)
-    if(len(r_sums) > 50):
-        del r_sums[0]
-
     print("Episode {} ({} steps) finished with {} reward".format(i_episode, dqn.step, r_sum))
     print("Epsilon:%f" % dqn.epsilon)
 
-    log_batch += "%d\t%f\n" % (dqn.step, sum(r_sums) / len(r_sums))
+    log_batch += "%d\t%f\n" % (dqn.step, r_sum)
 
     i_episode += 1
 
