@@ -37,7 +37,7 @@ class DDQN():
 
         return dqn
 
-    def __init__(self, model=None, n_actions=0 ,use_target=True, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
+    def __init__(self, model=None, n_actions=-1, use_target=True, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=100000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000,
                  priority_epsilon=0.01, priority_alpha=0.6):
         """

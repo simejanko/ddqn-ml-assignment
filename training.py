@@ -41,7 +41,7 @@ else:
 
 log_batch=""
 #preprocess_input(observation, 35,15, 84)
-while i_episode < 5000000:
+while i_episode < 50000000:
     if i_episode % 25 == 0:
         dqn.save("dqn_model")
         dqn.save("%s/dqn_model_%d" % (MODELS_DIR, i_episode), only_model=True)
