@@ -36,18 +36,7 @@ else:
     with open("log.txt","w") as file:
         file.write("steps\taverage reward\n")
 
-    # subsample=stride
-    # dim_ordering='th' - zato da je depth 0. dimenzija
-    model = Sequential()
-    model.add(Convolution2D(32, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', dim_ordering='th'))
-    model.add(Convolution2D(64, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', dim_ordering='th'))
-    model.add(Convolution2D(64, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', dim_ordering='th'))
-    model.add(Flatten())
-    model.add(Dense(128, activation="relu"))
-    model.add(Dense(env.action_space.n,  activation="linear"))
-    model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
-
-    dqn = DDQN(model, replay_size=300000, f_epsilon=500000, gamma=0.995, warmup=100000)
+    dqn = DDQN(n_actions=env.action_space.n, replay_size=300000, f_epsilon=500000, gamma=0.99, warmup=100000)
     i_episode = 1
 
 log_batch=""

@@ -5,6 +5,20 @@ import pickle
 import keras
 from dqn.sum_tree import SumTree
 import math
+from keras.models import  Sequential
+from keras.layers import Dense, Activation, Convolution2D, Flatten
+from keras.regularizers import l2
+from keras.optimizers import RMSprop
+from keras.metrics import mean_squared_error
+
+#model that was used by Deepmind with 2 consecutive frames instead of 4
+DEEPMIND_MODEL = Sequential([
+    Convolution2D(32, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', dim_ordering='th'),
+    Convolution2D(64, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', dim_ordering='th'),
+    Convolution2D(64, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', dim_ordering='th'),
+    Flatten(),
+    Dense(512, activation="relu"),
+])
 
 #TODO: refactor only_model
 class DDQN():
@@ -23,11 +37,12 @@ class DDQN():
 
         return dqn
 
-    def __init__(self, model, use_target=True, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
+    def __init__(self, model=None, n_actions=0 ,use_target=True, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=100000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000,
                  priority_epsilon=0.01, priority_alpha=0.6):
         """
         :param model: Keras neural network model.
+        :param n_actions: Number of possible actions. Only used if using default model.
         :param use_target: Use target model or not.
         :param replay_size: Size of experience replay memory.
         :param s_epsilon: Start epsilon for Q-learning.
@@ -40,6 +55,12 @@ class DDQN():
         :param priority_epsilon: Added to every priority to avoid zero-valued priorities.
         :param priority_alpha: Between 0-1. Strength of priority experience sampling. 0 means uniform.
         """
+
+        if model is None:
+            #use default model
+            model = DEEPMIND_MODEL
+            model.add(Dense(n_actions, activation="linear"))
+            model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
 
         self.model = model
         if use_target:
