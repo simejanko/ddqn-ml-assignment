@@ -34,7 +34,7 @@ if os.path.isfile('dqn_model.pkl'):
     i_episode = max([int(os.path.splitext(file)[0].split("_")[-1]) for file in os.listdir(MODELS_DIR)])
 else:
     with open("log.txt","w") as file:
-        file.write("steps\taverage reward\n")
+        file.write("steps\treward\taverage action Q\n")
 
     dqn = DDQN(n_actions=env.action_space.n, replay_size=300000, f_epsilon=500000, gamma=0.99, warmup=100000)
     i_episode = 1
@@ -54,10 +54,14 @@ while i_episode < 50000000:
     o2 = env.step(env.action_space.sample())[0]
     o = utils.preprocess_input((o1, o2), 35, 15, 84)
     done = False
+    #For logging reward and average action Q values
     r_sum = 0
+    #q_values = []
     while not done:
         if render:
             env.render()
+        #action, q_value = dqn.predict(o)
+        #q_values.append(q_value)
         action = dqn.predict(o)
         o3, reward, done, _ = env.step(action)
         o_n = utils.preprocess_input((o2, o3), 35, 15, 84)
@@ -69,6 +73,7 @@ while i_episode < 50000000:
     print("Episode {} ({} steps) finished with {} reward".format(i_episode, dqn.step, r_sum))
     print("Epsilon:%f" % dqn.epsilon)
 
+    #log_batch += "%d\t%f\t%f\n" % (dqn.step, r_sum, sum(q_values)/len(q_values))
     log_batch += "%d\t%f\n" % (dqn.step, r_sum)
 
     i_episode += 1

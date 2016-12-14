@@ -138,7 +138,8 @@ class DDQN():
             return random.randint(0,self.n_actions-1)
 
         Q = self.model.predict_on_batch(np.expand_dims(observation, axis=0))[0]
-        return np.argmax(Q)
+        a = np.argmax(Q)
+        return a  #, Q[a]
 
     #TODO: Refactor. Prioritized experience replay kinda ruined it.
     def learning_step(self, observation, action, reward, new_observation, done):

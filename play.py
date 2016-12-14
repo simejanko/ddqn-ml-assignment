@@ -44,7 +44,7 @@ while True:
     r_sum = 0
     while not done:
         env.render()
-        action = dqns[i_model].predict(o, use_epsilon=False)
+        action, _ = dqns[i_model].predict(o, use_epsilon=False)
         o3, reward, done, _ = env.step(action)
         o_n = utils.preprocess_input((o2, o3), 35, 15, 84)
         o2 = o3

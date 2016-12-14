@@ -4,11 +4,11 @@ import numpy as np
 
 LOG_FILE = 'log.txt'
 #only odd numbers
-N_AVG = 51
+N_AVG = 21
 
 #in the beggining we were already logging running average of 50...
-DIRTY_LOG_N = 450
-
+#DIRTY_LOG_N = 450
+DIRTY_LOG_N = 0
 
 
 data = np.loadtxt(LOG_FILE, skiprows=1)
