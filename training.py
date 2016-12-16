@@ -32,17 +32,20 @@ env = gym.make('Pong-v0')
 if os.path.isfile('dqn_model.pkl'):
     dqn = DDQN.load('dqn_model')
     i_episode = max([int(os.path.splitext(file)[0].split("_")[-1]) for file in os.listdir(MODELS_DIR)])
+    #dirty solution to prevent double saving
+    just_loaded = True
 else:
     with open("log.txt","w") as file:
         file.write("steps\treward\taverage action Q\n")
 
     dqn = DDQN(n_actions=env.action_space.n, replay_size=300000, f_epsilon=500000, gamma=0.99, warmup=100000)
     i_episode = 1
+    just_loaded = False
 
 log_batch=""
 #preprocess_input(observation, 35,15, 84)
 while i_episode < 50000000:
-    if i_episode % 25 == 0:
+    if i_episode % 25 == 0 and not just_loaded:
         dqn.save("dqn_model")
         dqn.save("%s/dqn_model_%d" % (MODELS_DIR, i_episode), only_model=True)
 
@@ -77,7 +80,7 @@ while i_episode < 50000000:
     log_batch += "%d\t%f\n" % (dqn.step, r_sum)
 
     i_episode += 1
-
+    just_loaded = False
 
 
 
