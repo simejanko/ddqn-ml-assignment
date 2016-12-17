@@ -79,7 +79,8 @@ while i_episode < 50000000:
 
         action, q_value = dqn.predict(obs.get_second_seq())
         print(action)
-        q_values.append(q_value)
+        if q_value != None:
+            q_values.append(q_value)
         o, reward, done, _ = env.step(PONG_ACTIONS_DICT[action])
         obs.add_observation(o)
         dqn.learning_step(obs.get_first_seq(), action, reward, obs.get_second_seq(), done)
@@ -88,7 +89,8 @@ while i_episode < 50000000:
     print("Episode {} ({} steps) finished with {} reward".format(i_episode, dqn.step, r_sum))
     print("Epsilon:%f" % dqn.epsilon)
 
-    log_batch += "%d\t%f\t%f\n" % (dqn.step, r_sum, sum(q_values)/len(q_values))
+    q_avg = sum(q_values)/len(q_values) if len(q_values) > 0 else 0
+    log_batch += "%d\t%f\t%f\n" % (dqn.step, r_sum, q_avg)
     #log_batch += "%d\t%f\n" % (dqn.step, r_sum)
 
     i_episode += 1
