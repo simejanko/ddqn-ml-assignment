@@ -1,8 +1,6 @@
 from dqn.dqn import GymDDQN
 import os
 
-
-
 #0- neutral, 2-dup, 3-down
 PONG_ACTIONS = [0,2,3]
 MODELS_DIR = 'models'

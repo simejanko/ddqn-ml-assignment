@@ -240,9 +240,11 @@ class GymDDQN(DDQN):
 
     def learning_step(self):
         action, q_value = self.predict(self.obs.get_second_seq())
+        gym_action = action
         if self.actions_dict is not None:
-            action = self.actions_dict[action]
-        o, reward, done, _ = self.env.step(action)
+            gym_action = self.actions_dict[action]
+
+        o, reward, done, _ = self.env.step(gym_action)
         self.obs.add_observation(o)
         super(GymDDQN, self).learning_step(self.obs.get_first_seq(), action, reward, self.obs.get_second_seq(), done)
 
