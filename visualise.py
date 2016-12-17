@@ -4,7 +4,7 @@ import numpy as np
 
 LOG_FILE = 'log.txt'
 #only odd numbers
-N_AVG = 21
+N_AVG = 31
 
 #in the beggining we were already logging running average of 50...
 #DIRTY_LOG_N = 450

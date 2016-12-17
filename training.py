@@ -10,8 +10,20 @@ from dqn.dqn import DDQN
 from dqn import utils
 import numpy as np
 import os
+import copy
+
+#ACTIONS
+#0 - neutral
+#1 - neutral
+#2 -up
+#3 -down
+#4 -up
+#5 -down
+
+PONG_ACTIONS_DICT = {0:0, 1:2, 2:3}
 
 MODELS_DIR = 'models'
+OBSERVATION_SIZE = 4
 render = False
 """def wait_input():
     global render
@@ -25,7 +37,6 @@ input_t = threading.Thread(target=wait_input)
 input_t.start()"""
 
 
-#TODO: try Dropout
 #TODO: every atari game has 6 action_space. Maybe try filtering. For example pong 3 possible actions: wait,up,down.
 #TODO: refactor sandbox
 env = gym.make('Pong-v0')
@@ -37,8 +48,8 @@ if os.path.isfile('dqn_model.pkl'):
 else:
     with open("log.txt","w") as file:
         file.write("steps\treward\taverage action Q\n")
-
-    dqn = DDQN(n_actions=env.action_space.n, replay_size=300000, f_epsilon=500000, gamma=0.99, warmup=100000)
+    #env.action_space.n
+    dqn = DDQN(n_actions=3, replay_size=200000, f_epsilon=500000, gamma=0.99, warmup=100000)
     i_episode = 1
     just_loaded = False
 
@@ -53,31 +64,30 @@ while i_episode < 50000000:
             log.write(log_batch)
         log_batch = ""
 
-    o1 = env.reset()
-    o2 = env.step(env.action_space.sample())[0]
-    o = utils.preprocess_input((o1, o2), 35, 15, 84)
+    obs = utils.ImageObservationStore(OBSERVATION_SIZE, 35, 15, 84)
+    obs.add_observation(env.reset())
+    while not obs.is_full():
+        obs.add_observation(env.step(env.action_space.sample())[0])
     done = False
     #For logging reward and average action Q values
     r_sum = 0
-    #q_values = []
+    q_values = []
     while not done:
         if render:
             env.render()
-        #action, q_value = dqn.predict(o)
-        #q_values.append(q_value)
-        action = dqn.predict(o)
-        o3, reward, done, _ = env.step(action)
-        o_n = utils.preprocess_input((o2, o3), 35, 15, 84)
-        dqn.learning_step(o, action, reward, o_n, done)
-        o2 = o3
-        o = o_n
+
+        action, q_value = dqn.predict(obs.get_second_seq())
+        q_values.append(q_value)
+        o, reward, done, _ = env.step(PONG_ACTIONS_DICT[action])
+        obs.add_observation(o)
+        dqn.learning_step(obs.get_first_seq(), action, reward, obs.get_second_seq(), done)
         r_sum += reward
 
     print("Episode {} ({} steps) finished with {} reward".format(i_episode, dqn.step, r_sum))
     print("Epsilon:%f" % dqn.epsilon)
 
-    #log_batch += "%d\t%f\t%f\n" % (dqn.step, r_sum, sum(q_values)/len(q_values))
-    log_batch += "%d\t%f\n" % (dqn.step, r_sum)
+    log_batch += "%d\t%f\t%f\n" % (dqn.step, r_sum, sum(q_values)/len(q_values))
+    #log_batch += "%d\t%f\n" % (dqn.step, r_sum)
 
     i_episode += 1
     just_loaded = False

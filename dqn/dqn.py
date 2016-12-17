@@ -10,10 +10,11 @@ from keras.layers import Dense, Activation, Convolution2D, Flatten
 from keras.regularizers import l2
 from keras.optimizers import RMSprop
 from keras.metrics import mean_squared_error
+import dqn.utils as utils
 
-#model that was used by Deepmind with 2 consecutive frames instead of 4
+#model that was used by Deepmind
 DEEPMIND_MODEL = Sequential([
-    Convolution2D(32, 8, 8, input_shape=(2,84,84), subsample=(4,4), border_mode='valid', activation='relu', dim_ordering='th'),
+    Convolution2D(32, 8, 8, input_shape=(4,84,84), subsample=(4,4), border_mode='valid', activation='relu', dim_ordering='th'),
     Convolution2D(64, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', dim_ordering='th'),
     Convolution2D(64, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', dim_ordering='th'),
     Flatten(),
@@ -39,7 +40,7 @@ class DDQN():
 
     def __init__(self, model=None, n_actions=-1, use_target=True, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=100000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000,
-                 priority_epsilon=0.01, priority_alpha=0.6):
+                 priority_epsilon=0.02, priority_alpha=0.4):
         """
         :param model: Keras neural network model.
         :param n_actions: Number of possible actions. Only used if using default model.
@@ -130,7 +131,8 @@ class DDQN():
     def predict(self, observation, use_epsilon=True):
         """
         Predicts next action with epsilon policy, given environment observation.
-        :param observation: Numpy array with the same shape as input Keras layer.
+        :param observation: Numpy array with the same shape as input Keras layer or
+                            utils.ObservationSequenceStore object.
         :param use_epsilon: Enables/disables epsilon policy.
         """
 
@@ -139,7 +141,7 @@ class DDQN():
 
         Q = self.model.predict_on_batch(np.expand_dims(observation, axis=0))[0]
         a = np.argmax(Q)
-        return a  #, Q[a]
+        return a, Q[a]
 
     #TODO: Refactor. Prioritized experience replay kinda ruined it.
     def learning_step(self, observation, action, reward, new_observation, done):
