@@ -44,11 +44,6 @@ class ObservationSequenceStore:
         if len(self.store) > self.size+1:
             del self.store[0]
 
-        plt.imshow(self.store[0], cmap='gray')
-        plt.show()
-        plt.imshow(self.store[-1], cmap='gray')
-        plt.show()
-
     def is_full(self):
         return self.size+1 == len(self.store)
 
