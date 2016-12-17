@@ -137,7 +137,7 @@ class DDQN():
         """
 
         if use_epsilon and (random.random() < self.epsilon or self.step <= self.warmup):
-            return random.randint(0,self.n_actions-1)
+            return random.randint(0,self.n_actions-1), 0
 
         Q = self.model.predict_on_batch(np.expand_dims(observation, axis=0))[0]
         a = np.argmax(Q)

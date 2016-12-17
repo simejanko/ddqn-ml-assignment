@@ -53,6 +53,7 @@ else:
     i_episode = 1
     just_loaded = False
 
+#TODO: separate Gym_DQN_agent class that can handle a bunch of this functionality
 log_batch=""
 #preprocess_input(observation, 35,15, 84)
 while i_episode < 50000000:
@@ -77,6 +78,7 @@ while i_episode < 50000000:
             env.render()
 
         action, q_value = dqn.predict(obs.get_second_seq())
+        print(action)
         q_values.append(q_value)
         o, reward, done, _ = env.step(PONG_ACTIONS_DICT[action])
         obs.add_observation(o)
