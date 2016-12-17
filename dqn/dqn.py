@@ -11,6 +11,7 @@ from keras.regularizers import l2
 from keras.optimizers import RMSprop
 from keras.metrics import mean_squared_error
 import dqn.utils as utils
+import gym
 
 #model that was used by Deepmind
 DEEPMIND_MODEL = Sequential([
@@ -21,7 +22,6 @@ DEEPMIND_MODEL = Sequential([
     Dense(512, activation="relu"),
 ])
 
-#TODO: refactor only_model
 class DDQN():
     @staticmethod
     def load(name, only_model = False):
@@ -196,3 +196,56 @@ class DDQN():
                 self.target_model.set_weights(self.model.get_weights())
 
         self.step += 1
+
+class GymDDQN(DDQN):
+    """
+    DDQN subclass that makes things easier to work with Gym environments
+    (Only for envs with pixel state decriptors - eg. Atari)
+    """
+
+    def __init__(self,env_name, actions_dict=None, observation_size=4, cut_u=35, cut_d=15, h=84, **kwargs):
+        """
+        :param env_name: name of Gym environment.
+        :param actions_dict: maps CNN output to Gym action.
+         Only set this in case you don't want to use default Gym action space for that environment
+         (Atari envs can for example contain some redundant actions). Note that this is still only used
+         with default Deepmind model. In case any other model is given, user is expected to have correct
+         number of output neurons for the given environment.
+        :param observation_size: Number of consequtive frames to represent observation.
+        :param cut_u: Observation preprocessing paramater. Look utils file for more info. Default: Atari parameters.
+        :param cut_d: Observation preprocessing paramater. Look utils file for more info. Default: Atari parameters.
+        :param h: Observation preprocessing paramater. Look utils file for more info. Default: Atari parameters.
+        :param kwargs: arguments for DDQN class constructor.
+        """
+
+        self.env = gym.make(env_name)
+        self.observation_size = observation_size
+        self.cut_u = cut_u
+        self.cut_d = cut_d
+        self.h = h
+
+        n_actions = self.env.action_space.n
+        if actions_dict is not None and 'model' not in kwargs:
+            self.actions_dict = actions_dict
+            n_actions = len(self.actions_dict)
+        kwargs['n_actions'] = n_actions
+        super(GymDDQN, self).__init__(**kwargs)
+        self._reset_episode()
+
+    def _reset_episode(self):
+        self.obs = utils.ImageObservationStore(self.observation_size, self.cut_u, self.cut_d, self.h)
+        self.obs.add_observation(self.env.reset())
+        while not self.obs.is_full():
+            self.obs.add_observation(self.env.step(self.env.action_space.sample())[0])
+
+    def learning_step(self):
+        action, q_value = self.predict(self.obs.get_second_seq())
+        if self.actions_dict is not None:
+            action = self.actions_dict[action]
+        o, reward, done, _ = self.env.step(action)
+        self.obs.add_observation(o)
+        super(GymDDQN, self).learning_step(self.obs.get_first_seq(), action, reward, self.obs.get_second_seq(), done)
+
+        if done:
+            self._reset_episode()
+        return action, reward, q_value, done
