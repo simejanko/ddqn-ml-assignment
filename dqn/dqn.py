@@ -203,7 +203,16 @@ class GymDDQN(DDQN):
     (Only for envs with pixel state decriptors - eg. Atari)
     """
 
-    def __init__(self,env_name, actions_dict=None, observation_size=4, cut_u=35, cut_d=15, h=84, **kwargs):
+    @staticmethod
+    def load(name, only_model = False, env_name="", actions_dict=None):
+        if only_model:
+            model = keras.models.load_model('{}.h5'.format(name))
+            dqn = GymDDQN(env_name, model=model, only_model=True, actions_dict=actions_dict)
+            return dqn
+
+        return DDQN.load(name)
+
+    def __init__(self,env_name, actions_dict=None, observation_size=4, cut_u=35, cut_d=15, h=84, only_model=False, **kwargs):
         """
         :param env_name: name of Gym environment.
         :param actions_dict: maps CNN output to Gym action.
@@ -223,12 +232,14 @@ class GymDDQN(DDQN):
         self.cut_u = cut_u
         self.cut_d = cut_d
         self.h = h
+        self.only_model = only_model
 
         n_actions = self.env.action_space.n
-        if actions_dict is not None and 'model' not in kwargs:
+        if actions_dict is not None:
             self.actions_dict = actions_dict
             n_actions = len(self.actions_dict)
         kwargs['n_actions'] = n_actions
+        kwargs['use_target'] = not only_model
         super(GymDDQN, self).__init__(**kwargs)
         self._reset_episode()
 
@@ -239,14 +250,16 @@ class GymDDQN(DDQN):
             self.obs.add_observation(self.env.step(self.env.action_space.sample())[0])
 
     def learning_step(self):
-        action, q_value = self.predict(self.obs.get_second_seq())
+        action, q_value = self.predict(self.obs.get_second_seq(), use_epsilon=not self.only_model)
         gym_action = action
         if self.actions_dict is not None:
             gym_action = self.actions_dict[action]
 
         o, reward, done, _ = self.env.step(gym_action)
         self.obs.add_observation(o)
-        super(GymDDQN, self).learning_step(self.obs.get_first_seq(), action, reward, self.obs.get_second_seq(), done)
+
+        if not self.only_model:
+            super(GymDDQN, self).learning_step(self.obs.get_first_seq(), action, reward, self.obs.get_second_seq(), done)
 
         if done:
             self._reset_episode()
