@@ -210,7 +210,10 @@ class GymDDQN(DDQN):
             dqn = GymDDQN(env_name, model=model, only_model=True, actions_dict=actions_dict)
             return dqn
 
-        return DDQN.load(name)
+        dqn = DDQN.load(name)
+        #TODO: remove bottom line with new run!!!
+        dqn.only_model = False
+        return dqn
 
     def __init__(self,env_name, actions_dict=None, observation_size=4, cut_u=35, cut_d=15, h=84, only_model=False, **kwargs):
         """

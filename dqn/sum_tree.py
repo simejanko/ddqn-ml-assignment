@@ -2,7 +2,7 @@
 import numpy
 import numpy as np
 import pickle
-
+import matplotlib.pyplot as plt
 class SumTree:
     write = 0
 
@@ -92,3 +92,7 @@ class SumTree:
     def sample(self, n):
         s_vec = numpy.random.uniform(0.0, self.tree[0], n)
         return [self.get(s) for s in s_vec]
+
+    def hist(self, **kwargs):
+        plt.hist(self.tree[self.capacity:], **kwargs)
+        plt.show()
