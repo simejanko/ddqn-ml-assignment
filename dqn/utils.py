@@ -24,10 +24,13 @@ def preprocess_input(image , cut_u=0, cut_d=0, h=-1):
         image = rgb2gray(image[cut_u:, :, :]).astype(int)
     aspect = image.shape[1]/image.shape[0]
     if h != -1:
+        #TODO: naslednji run nearest
         image = imresize(image, (h, int(h*aspect)), interp='bilinear')
     #    output.append(image)
     #print(np.array_equal(output[0],output[1]))
     #return np.array(output)
+    #plt.imshow(image, cmap='gray', vmin=0, vmax=255)
+    #plt.show()
     return image
 
 
