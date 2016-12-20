@@ -4,7 +4,7 @@ import numpy as np
 
 LOG_FILE = 'log.txt'
 #only odd numbers
-N_AVG = 21
+N_AVG = 11
 
 data = np.loadtxt(LOG_FILE, skiprows=1)
 frames = data[int(N_AVG/2):int(-N_AVG/2), 0]

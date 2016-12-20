@@ -81,27 +81,33 @@ class DDQN():
         self.priority_alpha = priority_alpha
         self.step = 1
 
-    def _get_target(self, r, a_n, q_n, d):
+    def _get_target(self, orig, r, a_n, q_n, d):
         """
-        Calculates double Q-learning target.
+        Calculates double Q-learning target. Clips the diffrence from original value to [-1,1].
         """
         t = r
         if not d:
             t += self.gamma * q_n[a_n]
+
+        #clipping
+        if t-orig>1:
+            t = orig +1
+        elif t-orig<-1:
+            t = orig -1
         return t
 
     def _modify_target(self, t, a, r, d, a_n, q_n):
         """
         Modifies target vector with DDQN target.
         """
-        t[a] = self._get_target(r, a_n, q_n, d)
+        t[a] = self._get_target(t[a], r, a_n, q_n, d)
         return t
 
     def _get_propotional_priority(self, priority):
         return (priority + self.priority_epsilon)**self.priority_alpha
 
     def _get_priority(self, t, a, r, d, a_n, q_n):
-        priority = math.fabs(t[a] - self._get_target(r, a_n, q_n, d))
+        priority = math.fabs(t[a] - self._get_target(t[a], r, a_n, q_n, d))
         return self._get_propotional_priority(priority)
 
 
@@ -238,8 +244,8 @@ class GymDDQN(DDQN):
         self.only_model = only_model
 
         n_actions = self.env.action_space.n
+        self.actions_dict = actions_dict
         if actions_dict is not None:
-            self.actions_dict = actions_dict
             n_actions = len(self.actions_dict)
         kwargs['n_actions'] = n_actions
         kwargs['use_target'] = not only_model
