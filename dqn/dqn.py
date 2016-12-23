@@ -245,13 +245,13 @@ class GymDDQN(DDQN):
 
         #TODO
         def _step(a):
-            reward = 0.0
+            reward = 0
             action = self.env._action_set[a]
             lives_before = self.env.ale.lives()
             for _ in range(4):
                 reward += self.env.ale.act(action)
             ob = self.env._get_obs()
-            done = self.env.ale.game_over() or lives_before != self.env.ale.lives()
+            done = self.env.ale.game_over() or lives_before != self.env.ale.lives() or lives_before==0 and reward != 0
             return ob, reward, done, {}
         self.env._step = _step
 
