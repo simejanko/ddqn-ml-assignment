@@ -243,6 +243,18 @@ class GymDDQN(DDQN):
         self.h = h
         self.only_model = only_model
 
+        #TODO
+        def _step(a):
+            reward = 0.0
+            action = self.env._action_set[a]
+            lives_before = self.env.ale.lives()
+            for _ in range(4):
+                reward += self.env.ale.act(action)
+            ob = self.env._get_obs()
+            done = self.env.ale.game_over() or lives_before != self.env.ale.lives()
+            return ob, reward, done, {}
+        self.env._step = _step
+
         n_actions = self.env.action_space.n
         self.actions_dict = actions_dict
         if actions_dict is not None:

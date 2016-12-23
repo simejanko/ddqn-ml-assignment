@@ -72,3 +72,10 @@ class ImageObservationStore(ObservationSequenceStore):
 
     def add_observation(self, frame):
         super(ImageObservationStore, self).add_observation(preprocess_input(frame, self.cut_u, self.cut_d, self.h))
+
+    def visualise(self):
+        image = self.store[1]/self.size
+        for im in self.store[2:]:
+            image += im/self.size
+        plt.imshow(image, cmap='gray', vmin=0, vmax=255)
+        plt.show()

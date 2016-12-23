@@ -19,7 +19,7 @@ model = Sequential([
     Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', dim_ordering='th'),
     Flatten(),
     Dense(256, activation="relu"),
-    Dense(3, activation="linear"),
+    Dense(6, activation="linear"),
 
 ])
 model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
@@ -32,15 +32,15 @@ if os.path.isfile('dqn_model.pkl'):
 else:
     with open("log.txt","w") as file:
         file.write("steps\treward\taverage action Q\n")
-    dqn = GymDDQN('Pong-v0', model=model, actions_dict=PONG_ACTIONS,
-                  replay_size=110000, f_epsilon=1000000, gamma=0.99,
-                  warmup=75000, priority_alpha=0, hard_learn_interval=10000)
+    dqn = GymDDQN('Breakout-v0', model=model, #actions_dict=PONG_ACTIONS,
+                  replay_size=110000, f_epsilon=750000, gamma=0.99,
+                  warmup=75000, priority_alpha=0.5, hard_learn_interval=10000)
     i_episode = 1
     just_loaded = False
 
 log_batch=""
 while True:
-    if i_episode % 25 == 0 and not just_loaded:
+    if i_episode % 250 == 0 and not just_loaded:
         dqn.save("dqn_model")
         dqn.save("%s/dqn_model_%d" % (MODELS_DIR, i_episode), only_model=True)
 
