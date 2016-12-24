@@ -261,9 +261,12 @@ class GymDDQN(DDQN):
         self._reset_episode()
 
     def _reset_episode(self):
-        self.replay_memory.add(0, 0, 0, self.env.reset(), False)
+        self.replay_memory.add(0, 0, 0, self._preprocess_observation(self.env.reset()), False)
         for i in range(self.window_size-1):
-            self.replay_memory.add(0, 0, 0, self.env.step(self.env.action_space.sample())[0], False)
+            o = self._preprocess_observation(self.env.step(self.env.action_space.sample())[0])
+
+    def _preprocess_observation(self, o):
+        return utils.preprocess_input(o, cut_u=self.cut_u, cut_d=self.cut_d, h=self.h)
 
     def learning_step(self):
         action, q_value = self.predict(self.replay_memory.get_last_observation(), use_epsilon=not self.only_model)
@@ -272,7 +275,7 @@ class GymDDQN(DDQN):
             gym_action = self.actions_dict[action]
 
         o, reward, done, _ = self.env.step(gym_action)
-        o = utils.preprocess_input(o, cut_u=self.cut_u, cut_d=self.cut_d, h=self.h)
+        o = self._preprocess_observation(o)
 
         if not self.only_model:
             super(GymDDQN, self).learning_step(action, reward, o, done)

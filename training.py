@@ -33,13 +33,13 @@ else:
     with open("log.txt","w") as file:
         file.write("steps\treward\taverage action Q\n")
     dqn = GymDDQN('Breakout-v0', #actions_dict=PONG_ACTIONS,
-                  replay_size=500000, warmup=500000)
+                  replay_size= 1000000, warmup=1000000)
     i_episode = 1
     just_loaded = False
 
 log_batch=""
 while True:
-    if i_episode % 1000000 == 0 and not just_loaded:
+    if i_episode % 10000000 == 0 and not just_loaded:
         dqn.save("dqn_model")
         dqn.save("%s/dqn_model_%d" % (MODELS_DIR, i_episode), only_model=True)
 
