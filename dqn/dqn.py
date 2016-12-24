@@ -3,7 +3,7 @@ import random
 import copy
 import pickle
 import keras
-from dqn.sum_tree import SumTree
+from dqn.replay_memory import ReplayMemory
 import math
 from keras.models import  Sequential
 from keras.layers import Dense, Activation, Convolution2D, Flatten
@@ -31,7 +31,7 @@ class DDQN():
         else:
             with open('{}.pkl'.format(name), 'rb') as file:
                 dqn = pickle.load(file)
-                dqn.replay_memory = SumTree.load_by_chunks(file)
+                dqn.replay_memory = ReplayMemory.load_by_chunks(file)
 
             dqn.model = model
             dqn.target_model = keras.models.load_model('{}_target.h5'.format(name))
@@ -40,7 +40,7 @@ class DDQN():
 
     def __init__(self, model=None, n_actions=-1, use_target=True, replay_size=1000000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=1000000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000,
-                 priority_epsilon=0.02, priority_alpha=0.5):
+                 priority_epsilon=0.02, priority_alpha=0.5, window_size = 4):
         """
         :param model: Keras neural network model.
         :param n_actions: Number of possible actions. Only used if using default model.
@@ -55,6 +55,7 @@ class DDQN():
         :param warmup: Only perform random actions without learning for warmup steps.
         :param priority_epsilon: Added to every priority to avoid zero-valued priorities.
         :param priority_alpha: Between 0-1. Strength of priority experience sampling. 0 means uniform.
+        :param window_size: Number of last observations to use as a single observation (accounting for transitions).
         """
 
         if model is None:
@@ -69,7 +70,7 @@ class DDQN():
         else:
             self.target_model = model
         self.n_actions = model.layers[-1].output_shape[1]
-        self.replay_memory = SumTree(replay_size)
+        self.replay_memory = ReplayMemory(replay_size, window_size=window_size)
         self.epsilon = s_epsilon
         self.e_epsilon = e_epsilon
         self.d_epsilon = (e_epsilon - s_epsilon) / f_epsilon
@@ -79,6 +80,7 @@ class DDQN():
         self.warmup = warmup
         self.priority_epsilon = priority_epsilon
         self.priority_alpha = priority_alpha
+        self.window_size = window_size
         self.step = 1
 
     def _get_target(self, orig, r, a_n, q_n, d):
@@ -149,10 +151,9 @@ class DDQN():
         a = np.argmax(Q)
         return a, Q[a]
 
-    def learning_step(self, observation, action, reward, new_observation, done):
+    def learning_step(self, action, reward, new_observation, done):
         """
         Performs DDQN learning step
-        :param observation: Observation before performing the action.
         :param action: Action performed.
         :param reward: Reward after performing the action.
         :param new_observation:Observation after performing the action.
@@ -162,18 +163,15 @@ class DDQN():
         if self.step <= self.warmup:
             #we use reward as priority during warmup
             priority = self._get_propotional_priority(math.fabs(reward))
-            self.replay_memory.add(priority, (observation, action, reward, new_observation, done))
+            self.replay_memory.add(priority, action, reward, new_observation, done)
 
         else:
             if self.epsilon > self.e_epsilon:
                 self.epsilon += self.d_epsilon
 
             sample = self.replay_memory.sample(self.batch_size)
-            idxs, _, experiences = zip(*sample)
-            #We need to do a forward pass on latest_experience to gets it's priority.
-            #It is not used for learning though.
-            last_experience = (observation, action, reward, new_observation, done)
-            experiences += (last_experience, )
+            idxs, prior_priorities, experiences = zip(*sample)
+            self.replay_memory.add(2 * max(prior_priorities), action, reward, new_observation, done)
 
             obs, actions, rewards, obs2, dones = map(np.array, zip(*experiences))
             targets = self.model.predict_on_batch(obs)
@@ -185,16 +183,16 @@ class DDQN():
             priorities = [self._get_priority(t, actions[i], rewards[i], dones[i], a_next[i], Q_next[i])
                           for i, t in enumerate(targets)]
             #update priorities and add latest experience to memory
-            for idx, priority in zip(idxs, priorities[:-1]):
+            for idx, priority in zip(idxs, priorities):
                 self.replay_memory.update(idx, priority)
-            self.replay_memory.add(priorities[-1], last_experience)
+            #self.replay_memory.add(priorities, last_experience)
 
             #calculate new targets
             targets = np.array(
                 [self._modify_target(t, actions[i], rewards[i], dones[i], a_next[i], Q_next[i])
                 for i, t in enumerate(targets)])
             #latest experience is excluded from training
-            self.model.train_on_batch(obs[:-1], targets[:-1])
+            self.model.train_on_batch(obs, targets)
 
             #Update target network - aka hard learning step
             if self.step % self.hard_learn_interval == 0:
@@ -220,7 +218,7 @@ class GymDDQN(DDQN):
         dqn.only_model = False
         return dqn
 
-    def __init__(self,env_name, actions_dict=None, observation_size=4, cut_u=35, cut_d=15, h=84, only_model=False, **kwargs):
+    def __init__(self,env_name, actions_dict=None, cut_u=35, cut_d=15, h=84, only_model=False, **kwargs):
         """
         :param env_name: name of Gym environment.
         :param actions_dict: maps CNN output to Gym action.
@@ -236,7 +234,6 @@ class GymDDQN(DDQN):
         """
 
         self.env = gym.make(env_name)
-        self.observation_size = observation_size
         self.cut_u = cut_u
         self.cut_d = cut_d
         self.h = h
@@ -264,22 +261,20 @@ class GymDDQN(DDQN):
         self._reset_episode()
 
     def _reset_episode(self):
-        self.obs = utils.ImageObservationStore(self.observation_size, self.cut_u, self.cut_d, self.h)
-        self.obs.add_observation(self.env.reset())
-        while not self.obs.is_full():
-            self.obs.add_observation(self.env.step(self.env.action_space.sample())[0])
+        self.replay_memory.add(0, 0, 0, self.env.reset(), False)
+        for i in range(self.window_size-1):
+            self.replay_memory.add(0, 0, 0, self.env.step(self.env.action_space.sample())[0], False)
 
     def learning_step(self):
-        action, q_value = self.predict(self.obs.get_second_seq(), use_epsilon=not self.only_model)
+        action, q_value = self.predict(self.replay_memory.get_last_observation(), use_epsilon=not self.only_model)
         gym_action = action
         if self.actions_dict is not None:
             gym_action = self.actions_dict[action]
 
         o, reward, done, _ = self.env.step(gym_action)
-        self.obs.add_observation(o)
 
         if not self.only_model:
-            super(GymDDQN, self).learning_step(self.obs.get_first_seq(), action, reward, self.obs.get_second_seq(), done)
+            super(GymDDQN, self).learning_step(action, reward, o, done)
 
         if done:
             self._reset_episode()

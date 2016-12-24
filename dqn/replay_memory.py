@@ -3,7 +3,7 @@ import numpy
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
-class SumTree:
+class ReplayMemory:
     write = 0
 
     @staticmethod
@@ -13,20 +13,22 @@ class SumTree:
         :param file: File object.
         """
         sum_tree = pickle.load(file)
-        sum_tree.data = pickle.load(file)
+        sum_tree.frame_data = pickle.load(file)
         #sum_tree.data = numpy.zeros( sum_tree.capacity, dtype=object )
         while True:
             try:
-                sum_tree.data = np.append(sum_tree.data, pickle.load(file))
+                sum_tree.frame_data = np.append(sum_tree.frame_data, pickle.load(file))
             except EOFError:
                 break
 
         return sum_tree
 
-    def __init__(self, capacity):
+    def __init__(self, capacity, window_size=1):
         self.capacity = capacity
         self.tree = numpy.zeros( 2*capacity - 1 )
         self.data = numpy.zeros( capacity, dtype=object )
+        self.frame_data = numpy.zeros(capacity+window_size , dtype=object)
+        self.window_size = window_size
 
     def save_by_chunks(self, file, chunk_size=2000):
         """
@@ -34,18 +36,18 @@ class SumTree:
         :param file: File object.
         :param chunk_size: Size of a single chunk.
         """
-        data_temp = self.data
-        self.data = None
+        frame_data_temp = self.frame_data
+        self.frame_data = None
 
         pickle.dump(self, file)
-        self.data = data_temp
+        self.frame_data = frame_data_temp
 
-        for i in range(0, self.data.size, chunk_size):
+        for i in range(0, self.frame_data.size, chunk_size):
             end_i = i+chunk_size
-            if end_i > self.data.size:
-                end_i = self.data.size
+            if end_i > self.frame_data.size:
+                end_i = self.frame_data.size
 
-            pickle.dump(self.data[i:end_i], file)
+            pickle.dump(self.frame_data[i:end_i], file)
 
     def _propagate(self, idx, change):
         parent = (idx - 1) // 2
@@ -67,15 +69,17 @@ class SumTree:
         else:
             return self._retrieve(right, s-self.tree[left])
 
-    def add(self, p, data):
+    def add(self, p, a, r, obs2, d):
         idx = self.write + self.capacity - 1
 
-        self.data[self.write] = data
+        self.frame_data[self.write+self.window_size] = obs2
+        self.data[self.write] = (self.write, a, r, self.write+1, d)
         self.update(idx, p)
 
         self.write += 1
         if self.write >= self.capacity:
             self.write = 0
+
 
     def update(self, idx, p):
         change = p - self.tree[idx]
@@ -86,8 +90,15 @@ class SumTree:
     def get(self, s):
         idx = self._retrieve(0, s)
         dataIdx = idx - self.capacity + 1
+        obsIdx, a, r, obs2Idx, d = self.data[dataIdx]
+        obs, obs2 = self.frame_data[obsIdx:obsIdx+self.window_size], self.frame_data[obs2Idx:obs2Idx+self.window_size]
+        return idx, self.tree[idx], (obs, a, r, obs2, d)
 
-        return (idx, self.tree[idx], self.data[dataIdx])
+    def get_last_observation(self):
+        dataIdx = self.write-1
+        obsIdx, a, r, obs2Idx, d = self.data[dataIdx]
+        obs2 = self.frame_data[obs2Idx:obs2Idx + self.window_size]
+        return obs2
 
     def sample(self, n):
         s_vec = numpy.random.uniform(0.0, self.tree[0], n)
