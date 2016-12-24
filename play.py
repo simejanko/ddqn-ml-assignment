@@ -13,7 +13,7 @@ MODELS_DIR = 'models'
 dqns = []
 for file in os.listdir(MODELS_DIR):
     f_no_ext = os.path.splitext(file)[0]
-    dqn = GymDDQN.load('%s/%s' % (MODELS_DIR, f_no_ext), only_model=True, actions_dict=PONG_ACTIONS, env_name='Pong-v0')
+    dqn = GymDDQN.load('%s/%s' % (MODELS_DIR, f_no_ext), only_model=True,  env_name='Breakout-v0')
     i_episode = int(f_no_ext.split("_")[-1])
 
     dqns.append((i_episode, dqn))

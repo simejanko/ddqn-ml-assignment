@@ -4,7 +4,7 @@ import numpy as np
 
 LOG_FILE = 'log.txt'
 #only odd numbers
-N_AVG = 31
+N_AVG = 501
 
 data = np.loadtxt(LOG_FILE, skiprows=1)
 
