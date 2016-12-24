@@ -272,6 +272,7 @@ class GymDDQN(DDQN):
             gym_action = self.actions_dict[action]
 
         o, reward, done, _ = self.env.step(gym_action)
+        o = utils.preprocess_input(o, cut_u=self.cut_u, cut_d=self.cut_d, h=self.h)
 
         if not self.only_model:
             super(GymDDQN, self).learning_step(action, reward, o, done)
