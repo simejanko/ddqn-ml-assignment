@@ -31,7 +31,7 @@ def preprocess_input(image , cut_u=0, cut_d=0, h=-1):
     #return np.array(output)
     #plt.imshow(image, cmap='gray', vmin=0, vmax=255)
     #plt.show()
-    return image
+    return image.astype(np.uint8)
 
 
 class ObservationSequenceStore:

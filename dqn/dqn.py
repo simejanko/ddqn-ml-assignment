@@ -8,16 +8,16 @@ import math
 from keras.models import  Sequential
 from keras.layers import Dense, Activation, Convolution2D, Flatten
 from keras.regularizers import l2
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, Adam
 from keras.metrics import mean_squared_error
 import dqn.utils as utils
 import gym
 
 #model that was used by Deepmind
 DEEPMIND_MODEL = Sequential([
-    Convolution2D(32, 8, 8, input_shape=(4,84,84), subsample=(4,4), border_mode='valid', activation='relu', dim_ordering='th'),
-    Convolution2D(64, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', dim_ordering='th'),
-    Convolution2D(64, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', dim_ordering='th'),
+    Convolution2D(32, 8, 8, input_shape=(4,84,84), subsample=(4,4), activation='relu', dim_ordering='th'),
+    Convolution2D(64, 4, 4, subsample=(2,2), activation='relu', dim_ordering='th'),
+    Convolution2D(64, 3, 3, subsample=(1,1), activation='relu', dim_ordering='th'),
     Flatten(),
     Dense(512, activation="relu"),
 ])
@@ -38,8 +38,8 @@ class DDQN():
 
         return dqn
 
-    def __init__(self, model=None, n_actions=-1, use_target=True, replay_size=100000, s_epsilon=1.0, e_epsilon=0.1,
-                 f_epsilon=100000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000,
+    def __init__(self, model=None, n_actions=-1, use_target=True, replay_size=1000000, s_epsilon=1.0, e_epsilon=0.1,
+                 f_epsilon=1000000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000,
                  priority_epsilon=0.02, priority_alpha=0.5):
         """
         :param model: Keras neural network model.
@@ -61,7 +61,7 @@ class DDQN():
             #use default model
             model = DEEPMIND_MODEL
             model.add(Dense(n_actions, activation="linear"))
-            model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
+            model.compile(optimizer=Adam(lr=0.00025), loss='mse', metrics=[mean_squared_error]) #RMSprop(lr=0.00025)
 
         self.model = model
         if use_target:
@@ -149,7 +149,6 @@ class DDQN():
         a = np.argmax(Q)
         return a, Q[a]
 
-    #TODO: Refactor. Prioritized experience replay kinda ruined it.
     def learning_step(self, observation, action, reward, new_observation, done):
         """
         Performs DDQN learning step
