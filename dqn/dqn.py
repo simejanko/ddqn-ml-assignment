@@ -40,7 +40,7 @@ class DDQN():
 
     def __init__(self, model=None, n_actions=-1, use_target=True, replay_size=1000000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=1000000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000,
-                 priority_epsilon=0.02, priority_alpha=0.5, window_size = 4):
+                 priority_epsilon=0.02, priority_alpha=0.6, window_size = 4):
         """
         :param model: Keras neural network model.
         :param n_actions: Number of possible actions. Only used if using default model.
@@ -171,7 +171,7 @@ class DDQN():
 
             sample = self.replay_memory.sample(self.batch_size)
             idxs, prior_priorities, experiences = zip(*sample)
-            self.replay_memory.add(2 * max(prior_priorities), action, reward, new_observation, done)
+            self.replay_memory.add(3 * max(prior_priorities), action, reward, new_observation, done)
 
             obs, actions, rewards, obs2, dones = map(np.array, zip(*experiences))
             targets = self.model.predict_on_batch(obs)
