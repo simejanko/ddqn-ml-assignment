@@ -93,7 +93,8 @@ class ReplayMemory:
         idx = self._retrieve(0, s)
         dataIdx = idx - self.capacity + 1
         obsIdx, a, r, obs2Idx, d = self.data[dataIdx]
-        obs, obs2 = self.frame_data[obsIdx:obsIdx+self.window_size], self.frame_data[obs2Idx:obs2Idx+self.window_size]
+        obs = [f for f in self.frame_data[obsIdx:obsIdx+self.window_size]]
+        obs2 = [f for f in self.frame_data[obs2Idx:obs2Idx+self.window_size]]
         return idx, self.tree[idx], (obs, a, r, obs2, d)
 
     def get_last_observation(self):
