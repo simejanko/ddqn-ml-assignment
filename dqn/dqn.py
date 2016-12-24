@@ -15,9 +15,9 @@ import gym
 
 #model that was used by Deepmind
 DEEPMIND_MODEL = Sequential([
-    Convolution2D(32, 8, 8, input_shape=(4,84,84), subsample=(4,4), activation='relu', dim_ordering='th'),
-    Convolution2D(64, 4, 4, subsample=(2,2), activation='relu', dim_ordering='th'),
-    Convolution2D(64, 3, 3, subsample=(1,1), activation='relu', dim_ordering='th'),
+    Convolution2D(32, 8, 8, input_shape=(4,84,84), border_mode='valid',subsample=(4,4), activation='relu', dim_ordering='th'),
+    Convolution2D(64, 4, 4, subsample=(2,2), border_mode='valid',activation='relu', dim_ordering='th'),
+    Convolution2D(64, 3, 3, subsample=(1,1), border_mode='valid',activation='relu', dim_ordering='th'),
     Flatten(),
     Dense(512, activation="relu"),
 ])
@@ -62,7 +62,7 @@ class DDQN():
             #use default model
             model = DEEPMIND_MODEL
             model.add(Dense(n_actions, activation="linear"))
-            model.compile(optimizer=Adam(lr=0.00025), loss='mse', metrics=[mean_squared_error]) #RMSprop(lr=0.00025)
+            model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
 
         self.model = model
         if use_target:
@@ -269,7 +269,7 @@ class GymDDQN(DDQN):
         return utils.preprocess_input(o, cut_u=self.cut_u, cut_d=self.cut_d, h=self.h)
 
     def learning_step(self):
-        action, q_value = self.predict(self.replay_memory.get_last_observation(), use_epsilon=not self.only_model)
+        action, q_value = self.predict(np.array(self.replay_memory.get_last_observation()), use_epsilon=not self.only_model)
         gym_action = action
         if self.actions_dict is not None:
             gym_action = self.actions_dict[action]

@@ -100,7 +100,7 @@ class ReplayMemory:
     def get_last_observation(self):
         dataIdx = self.write-1
         obsIdx, a, r, obs2Idx, d = self.data[dataIdx]
-        obs2 = self.frame_data[obs2Idx:obs2Idx + self.window_size]
+        obs2 = [f for f in self.frame_data[obs2Idx:obs2Idx + self.window_size]]
         return obs2
 
     def sample(self, n):

@@ -32,7 +32,7 @@ if os.path.isfile('dqn_model.pkl'):
 else:
     with open("log.txt","w") as file:
         file.write("steps\treward\taverage action Q\n")
-    dqn = GymDDQN('Breakout-v0', warmup=5000, replay_size=5000)
+    dqn = GymDDQN('Breakout-v0', replay_size=850000)
     i_episode = 1
     just_loaded = False
 
