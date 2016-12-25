@@ -11,7 +11,7 @@ from keras.metrics import mean_squared_error
 PONG_ACTIONS = [0,2,3]
 MODELS_DIR = 'models'
 OBSERVATION_SIZE = 4
-render = False
+render = True
 
 """model = Sequential([
     Convolution2D(16, 8, 8, input_shape=(4,84,84), subsample=(4,4), border_mode='valid', activation='relu', dim_ordering='th'),
@@ -38,7 +38,7 @@ else:
 
 log_batch=""
 while True:
-    if i_episode % 2000 == 0 and not just_loaded:
+    if i_episode % 250 == 0 and not just_loaded:
         dqn.save("dqn_model")
         dqn.save("%s/dqn_model_%d" % (MODELS_DIR, i_episode), only_model=True)
 

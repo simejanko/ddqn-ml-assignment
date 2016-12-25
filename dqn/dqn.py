@@ -258,7 +258,7 @@ class AtariDDQN(DDQN):
         kwargs['n_actions'] = n_actions
         kwargs['use_target'] = not only_model
         super(AtariDDQN, self).__init__(**kwargs)
-        self._reset_episode()
+        self._reset_episode(True)
 
     def _reset_episode(self, hard):
         n = self.window_size
@@ -284,6 +284,7 @@ class AtariDDQN(DDQN):
         if not self.only_model:
             super(AtariDDQN, self).learning_step(action, reward, o, done)
 
+        game_over = self.env.ale.game_over()
         if done:
-            self._reset_episode(self.env.ale.game_over())
-        return action, reward, q_value, self.env.ale.game_over()
+            self._reset_episode(game_over)
+        return action, reward, q_value, game_over
