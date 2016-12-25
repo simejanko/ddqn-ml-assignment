@@ -211,11 +211,11 @@ class AtariDDQN(DDQN):
         if only_model:
             model = keras.models.load_model('{}.h5'.format(name))
             dqn = AtariDDQN(env_name, model=model, only_model=True, actions_dict=actions_dict)
+            dqn._set_step_func()
             return dqn
 
         dqn = DDQN.load(name)
-        #TODO: remove bottom line with new run!!!
-        dqn.only_model = False
+        dqn._set_step_func()
         return dqn
 
     def __init__(self,env_name, actions_dict=None, cut_u=35, cut_d=15, h=84, only_model=False, **kwargs):
@@ -238,8 +238,18 @@ class AtariDDQN(DDQN):
         self.cut_d = cut_d
         self.h = h
         self.only_model = only_model
+        self._set_step_func()
 
-        #TODO
+        n_actions = self.env.action_space.n
+        self.actions_dict = actions_dict
+        if actions_dict is not None:
+            n_actions = len(self.actions_dict)
+        kwargs['n_actions'] = n_actions
+        kwargs['use_target'] = not only_model
+        super(AtariDDQN, self).__init__(**kwargs)
+        self._reset_episode()
+
+    def _set_step_func(self):
         def _step(a):
             reward = 0
             action = self.env._action_set[a]
@@ -250,15 +260,6 @@ class AtariDDQN(DDQN):
             done = self.env.ale.game_over() or lives_before != self.env.ale.lives()
             return ob, reward, done, {}
         self.env._step = _step
-
-        n_actions = self.env.action_space.n
-        self.actions_dict = actions_dict
-        if actions_dict is not None:
-            n_actions = len(self.actions_dict)
-        kwargs['n_actions'] = n_actions
-        kwargs['use_target'] = not only_model
-        super(AtariDDQN, self).__init__(**kwargs)
-        self._reset_episode()
 
     def _reset_episode(self):
         self.replay_memory.add(0, 0, 0, self._preprocess_observation(self.env.reset()), False)

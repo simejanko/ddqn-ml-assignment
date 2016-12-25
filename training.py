@@ -11,7 +11,7 @@ from keras.metrics import mean_squared_error
 PONG_ACTIONS = [0,2,3]
 MODELS_DIR = 'models'
 OBSERVATION_SIZE = 4
-render = False
+render = True
 
 """model = Sequential([
     Convolution2D(16, 8, 8, input_shape=(4,84,84), subsample=(4,4), border_mode='valid', activation='relu', dim_ordering='th'),
@@ -59,12 +59,11 @@ while True:
         if q_value is not None:
             q_values.append(q_value)
 
-
-    print("Episode {} ({} steps) finished with {} reward".format(i_episode, dqn.step, r_sum))
-    print("Epsilon:%f" % dqn.epsilon)
-
     q_avg = sum(q_values)/len(q_values) if len(q_values) > 0 else 0
     log_batch += "%d\t%f\t%f\n" % (dqn.step, r_sum, q_avg)
+
+    print("Episode {} ({} steps) finished with {} reward and {:.2f} avg. Q".format(i_episode, dqn.step, r_sum, q_avg))
+    print("Epsilon:%f" % dqn.epsilon)
 
     i_episode += 1
     just_loaded = False

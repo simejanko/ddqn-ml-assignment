@@ -3,7 +3,7 @@ import numpy as np
 import json
 
 #only odd numbers
-N_AVG = 501
+N_AVG = 201
 LOG_FILE = 'log.txt'
 #COMPARISON_LOG_FILE = 'dqn_Breakout-v0_log.json'
 
