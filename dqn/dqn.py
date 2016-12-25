@@ -170,8 +170,7 @@ class DDQN():
                 self.epsilon += self.d_epsilon
 
             sample = self.replay_memory.sample(self.batch_size)
-            idxs, prior_priorities, experiences = zip(*sample)
-            self.replay_memory.add(3 * max(prior_priorities), action, reward, new_observation, done)
+            idxs, _, experiences = zip(*sample)
 
             obs, actions, rewards, obs2, dones = map(np.array, zip(*experiences))
             targets = self.model.predict_on_batch(obs)
@@ -185,6 +184,7 @@ class DDQN():
             #update priorities and add latest experience to memory
             for idx, priority in zip(idxs, priorities):
                 self.replay_memory.update(idx, priority)
+            self.replay_memory.add(2 * max(priorities), action, reward, new_observation, done)
             #self.replay_memory.add(priorities, last_experience)
 
             #calculate new targets
