@@ -109,7 +109,7 @@ class DDQN():
         return (priority + self.priority_epsilon)**self.priority_alpha
 
     def _get_priority(self, t, a, r, d, a_n, q_n):
-        priority = math.fabs(t[a] - self._get_target(t[a], r, a_n, q_n, d))
+        priority = abs(t[a] - self._get_target(t[a], r, a_n, q_n, d))
         return self._get_propotional_priority(priority)
 
 
@@ -162,7 +162,7 @@ class DDQN():
         """
         if self.step <= self.warmup:
             #we use reward as priority during warmup
-            priority = self._get_propotional_priority(math.fabs(reward))
+            priority = self._get_propotional_priority(abs(reward))
             self.replay_memory.add(priority, action, reward, new_observation, done)
 
         else:
@@ -184,7 +184,7 @@ class DDQN():
             #update priorities and add latest experience to memory
             for idx, priority in zip(idxs, priorities):
                 self.replay_memory.update(idx, priority)
-            self.replay_memory.add(2 * max(priorities), action, reward, new_observation, done)
+            self.replay_memory.add(abs(3 * max(priorities)), action, reward, new_observation, done)
             #self.replay_memory.add(priorities, last_experience)
 
             #calculate new targets
@@ -247,7 +247,7 @@ class AtariDDQN(DDQN):
             for _ in range(4):
                 reward += self.env.ale.act(action)
             ob = self.env._get_obs()
-            done = self.env.ale.game_over() or lives_before != self.env.ale.lives() or lives_before==0 and reward != 0
+            done = self.env.ale.game_over() or lives_before != self.env.ale.lives()
             return ob, reward, done, {}
         self.env._step = _step
 
