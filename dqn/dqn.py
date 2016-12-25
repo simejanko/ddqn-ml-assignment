@@ -200,17 +200,17 @@ class DDQN():
 
         self.step += 1
 
-class GymDDQN(DDQN):
+class AtariDDQN(DDQN):
     """
-    DDQN subclass that makes things easier to work with Gym environments
-    (Only for envs with pixel state decriptors - eg. Atari)
+    DDQN subclass that makes things easier to work with Atari environments
+    (Only for envs with pixel state decriptors)
     """
 
     @staticmethod
     def load(name, only_model = False, env_name="", actions_dict=None):
         if only_model:
             model = keras.models.load_model('{}.h5'.format(name))
-            dqn = GymDDQN(env_name, model=model, only_model=True, actions_dict=actions_dict)
+            dqn = AtariDDQN(env_name, model=model, only_model=True, actions_dict=actions_dict)
             return dqn
 
         dqn = DDQN.load(name)
@@ -257,13 +257,17 @@ class GymDDQN(DDQN):
             n_actions = len(self.actions_dict)
         kwargs['n_actions'] = n_actions
         kwargs['use_target'] = not only_model
-        super(GymDDQN, self).__init__(**kwargs)
+        super(AtariDDQN, self).__init__(**kwargs)
         self._reset_episode()
 
-    def _reset_episode(self):
-        self.replay_memory.add(0, 0, 0, self._preprocess_observation(self.env.reset()), False)
-        for i in range(self.window_size-1):
+    def _reset_episode(self, hard):
+        n = self.window_size
+        if hard:
+            self.replay_memory.add(0, 0, 0, self._preprocess_observation(self.env.reset()), False)
+            n -= 1
+        for i in range(n):
             o = self._preprocess_observation(self.env.step(self.env.action_space.sample())[0])
+            self.replay_memory.add(0, 0, 0 , o, False)
 
     def _preprocess_observation(self, o):
         return utils.preprocess_input(o, cut_u=self.cut_u, cut_d=self.cut_d, h=self.h)
@@ -278,8 +282,8 @@ class GymDDQN(DDQN):
         o = self._preprocess_observation(o)
 
         if not self.only_model:
-            super(GymDDQN, self).learning_step(action, reward, o, done)
+            super(AtariDDQN, self).learning_step(action, reward, o, done)
 
         if done:
-            self._reset_episode()
-        return action, reward, q_value, done
+            self._reset_episode(self.env.ale.game_over())
+        return action, reward, q_value, self.env.ale.game_over()

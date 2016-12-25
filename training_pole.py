@@ -6,7 +6,7 @@ from keras.regularizers import l2
 from keras.optimizers import RMSprop
 from keras.metrics import mean_squared_error
 import gym_ple
-from dqn.dqn import GymDDQN, DDQN
+from dqn.dqn import AtariDDQN, DDQN
 from dqn import utils
 import numpy as np
 import os

@@ -1,4 +1,4 @@
-from dqn.dqn import GymDDQN
+from dqn.dqn import AtariDDQN
 import os
 from keras.models import  Sequential
 from keras.layers import Dense, Activation, Convolution2D, Flatten
@@ -25,14 +25,14 @@ render = False
 model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])"""
 
 if os.path.isfile('dqn_model.pkl'):
-    dqn = GymDDQN.load('dqn_model')
+    dqn = AtariDDQN.load('dqn_model')
     i_episode = max([int(os.path.splitext(file)[0].split("_")[-1]) for file in os.listdir(MODELS_DIR)])
     #dirty solution to prevent double saving
     just_loaded = True
 else:
     with open("log.txt","w") as file:
         file.write("steps\treward\taverage action Q\n")
-    dqn = GymDDQN('Breakout-v0', replay_size=850000)
+    dqn = AtariDDQN('Breakout-v0', replay_size=850000)
     i_episode = 1
     just_loaded = False
 
