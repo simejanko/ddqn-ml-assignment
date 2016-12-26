@@ -11,7 +11,7 @@ from keras.metrics import mean_squared_error
 PONG_ACTIONS = [0,2,3]
 MODELS_DIR = 'models'
 OBSERVATION_SIZE = 4
-render = True
+render = False
 
 """model = Sequential([
     Convolution2D(16, 8, 8, input_shape=(4,84,84), subsample=(4,4), border_mode='valid', activation='relu', dim_ordering='th'),

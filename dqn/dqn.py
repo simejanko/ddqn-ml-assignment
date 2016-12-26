@@ -12,6 +12,7 @@ from keras.optimizers import RMSprop, Adam
 from keras.metrics import mean_squared_error
 import dqn.utils as utils
 import gym
+import matplotlib.pyplot as plt
 
 #model that was used by Deepmind
 DEEPMIND_MODEL = Sequential([
@@ -261,11 +262,13 @@ class AtariDDQN(DDQN):
             return ob, reward, done, {}
         self.env._step = _step
 
+    #mogoče probi non-zero majhne prioritiete
     def _reset_episode(self):
-        self.replay_memory.add(0, 0, 0, self._preprocess_observation(self.env.reset()), False)
+        self.replay_memory.add(0, self.env.action_space.sample(), 0, self._preprocess_observation(self.env.reset()), False)
         for i in range(self.window_size-1):
-            o = self._preprocess_observation(self.env.step(self.env.action_space.sample())[0])
-            self.replay_memory.add(0, 0, 0 , o, False)
+            a = self.env.action_space.sample()
+            o = self._preprocess_observation(self.env.step(a)[0])
+            self.replay_memory.add(0, a, 0 , o, False)
 
     def _preprocess_observation(self, o):
         return utils.preprocess_input(o, cut_u=self.cut_u, cut_d=self.cut_d, h=self.h)
