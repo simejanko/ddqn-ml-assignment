@@ -38,7 +38,7 @@ else:
 
 log_batch=""
 while True:
-    if i_episode % 2000 == 0 and not just_loaded:
+    if i_episode % 250 == 0 and not just_loaded:
         dqn.save("dqn_model")
         dqn.save("%s/dqn_model_%d" % (MODELS_DIR, i_episode), only_model=True)
 

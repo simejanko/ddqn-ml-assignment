@@ -13,14 +13,20 @@ from keras.metrics import mean_squared_error
 import dqn.utils as utils
 import gym
 import matplotlib.pyplot as plt
+from keras import initializations
+
+def weight_init(shape, name):
+    return initializations.normal(shape, scale=0.01, name=name)
+
+keras.initializations.weight_init = weight_init
 
 #model that was used by Deepmind
 DEEPMIND_MODEL = Sequential([
-    Convolution2D(32, 8, 8, input_shape=(4,84,84), border_mode='valid',subsample=(4,4), activation='relu', dim_ordering='th'),
-    Convolution2D(64, 4, 4, subsample=(2,2), border_mode='valid',activation='relu', dim_ordering='th'),
-    Convolution2D(64, 3, 3, subsample=(1,1), border_mode='valid',activation='relu', dim_ordering='th'),
+    Convolution2D(32, 8, 8, input_shape=(4,84,84), subsample=(4,4), init=weight_init, activation='relu', dim_ordering='th'),
+    Convolution2D(64, 4, 4, subsample=(2,2), init=weight_init, activation='relu', dim_ordering='th'),
+    Convolution2D(64, 3, 3, subsample=(1,1), init=weight_init, activation='relu', dim_ordering='th'),
     Flatten(),
-    Dense(512, activation="relu"),
+    Dense(512, init=weight_init, activation="relu"),
 ])
 
 class DDQN():
@@ -62,8 +68,8 @@ class DDQN():
         if model is None:
             #use default model
             model = DEEPMIND_MODEL
-            model.add(Dense(n_actions, activation="linear"))
-            model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])
+            model.add(Dense(n_actions, init=weight_init, activation="linear"))
+            model.compile(optimizer=RMSprop(lr=0.00025), loss='mse')
 
         self.model = model
         if use_target:

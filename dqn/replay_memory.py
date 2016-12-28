@@ -73,10 +73,17 @@ class ReplayMemory:
         idx = self.write + self.capacity - 1
 
         self.frame_data[self.write+self.window_size] = obs2
-        if self.write == 0:
-            self.frame_data[self.write: self.window_size] = [obs2] * self.window_size
+        #if self.write == 0:
+        #    self.frame_data[self.write: self.window_size] = [obs2] * self.window_size
         self.data[self.write] = (self.write, a, r, self.write+1, d)
         self.update(idx, p)
+
+        #set priority of invalid state to 0
+        i_write = self.write + self.window_size
+        if i_write >= self.capacity:
+            i_write -= self.capacity
+        i_idx = i_write + self.capacity -1
+        self.update(i_idx, 0)
 
         self.write += 1
         if self.write >= self.capacity:
