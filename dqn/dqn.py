@@ -34,7 +34,7 @@ class DDQN():
     def load(name, only_model = False):
         model = keras.models.load_model('{}.h5'.format(name))
         if only_model:
-            dqn = DDQN(model, use_target=False)
+            dqn = DDQN(model, train=False)
         else:
             with open('{}.pkl'.format(name), 'rb') as file:
                 dqn = pickle.load(file)
@@ -45,13 +45,13 @@ class DDQN():
 
         return dqn
 
-    def __init__(self, model=None, n_actions=-1, use_target=True, replay_size=1000000, s_epsilon=1.0, e_epsilon=0.1,
+    def __init__(self, model=None, n_actions=-1, train=True, replay_size=1000000, s_epsilon=1.0, e_epsilon=0.1,
                  f_epsilon=1000000, batch_size=32, gamma=0.99, hard_learn_interval=10000, warmup=50000,
                  priority_epsilon=0.02, priority_alpha=0.6, window_size = 4):
         """
         :param model: Keras neural network model.
         :param n_actions: Number of possible actions. Only used if using default model.
-        :param use_target: Use target model or not.
+        :param train: Whether to train or not (test).
         :param replay_size: Size of experience replay memory.
         :param s_epsilon: Start epsilon for Q-learning.
         :param e_epsilon: End epsilon for Q-learning.
@@ -72,22 +72,27 @@ class DDQN():
             model.compile(optimizer=RMSprop(lr=0.00025), loss='mse')
 
         self.model = model
-        if use_target:
-            self.target_model = copy.deepcopy(model)
-        else:
-            self.target_model = model
         self.n_actions = model.layers[-1].output_shape[1]
         self.replay_memory = ReplayMemory(replay_size, window_size=window_size)
         self.epsilon = s_epsilon
         self.e_epsilon = e_epsilon
         self.d_epsilon = (e_epsilon - s_epsilon) / f_epsilon
         self.batch_size = batch_size
+        self.warmup = warmup
         self.gamma = gamma
         self.hard_learn_interval = hard_learn_interval
-        self.warmup = warmup
         self.priority_epsilon = priority_epsilon
         self.priority_alpha = priority_alpha
         self.window_size = window_size
+        self.train = train
+
+        if train:
+            self.target_model = copy.deepcopy(model)
+        else:
+            self.target_model = model
+            self.warmup = -1
+            self.e_epsilon = s_epsilon
+
         self.step = 1
 
     def _get_target(self, orig, r, a_n, q_n, d):
@@ -143,15 +148,14 @@ class DDQN():
             self.replay_memory = replay_memory_tmp
 
 
-    def predict(self, observation, use_epsilon=True):
+    def predict(self, observation):
         """
         Predicts next action with epsilon policy, given environment observation.
         :param observation: Numpy array with the same shape as input Keras layer or
                             utils.ObservationSequenceStore object.
-        :param use_epsilon: Enables/disables epsilon policy.
         """
 
-        if use_epsilon and (random.random() < self.epsilon or self.step <= self.warmup):
+        if random.random() < self.epsilon or self.step <= self.warmup:
             return random.randint(0,self.n_actions-1), None
 
         Q = self.model.predict_on_batch(np.expand_dims(observation, axis=0))[0]
@@ -217,15 +221,15 @@ class AtariDDQN(DDQN):
     def load(name, only_model = False, env_name="", actions_dict=None):
         if only_model:
             model = keras.models.load_model('{}.h5'.format(name))
-            dqn = AtariDDQN(env_name, model=model, only_model=True, actions_dict=actions_dict)
-            dqn._set_step_func()
+            dqn = AtariDDQN(env_name, model=model, actions_dict=actions_dict, train=False, s_epsilon=0.05)
+            #dqn._set_step_func()
             return dqn
 
         dqn = DDQN.load(name)
         dqn._set_step_func()
         return dqn
 
-    def __init__(self,env_name, actions_dict=None, cut_u=35, cut_d=15, h=84, only_model=False, **kwargs):
+    def __init__(self,env_name, actions_dict=None, cut_u=35, cut_d=15, h=84, **kwargs):
         """
         :param env_name: name of Gym environment.
         :param actions_dict: maps CNN output to Gym action.
@@ -244,7 +248,6 @@ class AtariDDQN(DDQN):
         self.cut_u = cut_u
         self.cut_d = cut_d
         self.h = h
-        self.only_model = only_model
         self._set_step_func()
 
         n_actions = self.env.action_space.n
@@ -252,7 +255,6 @@ class AtariDDQN(DDQN):
         if actions_dict is not None:
             n_actions = len(self.actions_dict)
         kwargs['n_actions'] = n_actions
-        kwargs['use_target'] = not only_model
         super(AtariDDQN, self).__init__(**kwargs)
         self._reset_episode()
 
@@ -280,7 +282,7 @@ class AtariDDQN(DDQN):
         return utils.preprocess_input(o, cut_u=self.cut_u, cut_d=self.cut_d, h=self.h)
 
     def learning_step(self):
-        action, q_value = self.predict(np.array(self.replay_memory.get_last_observation()), use_epsilon=not self.only_model)
+        action, q_value = self.predict(np.array(self.replay_memory.get_last_observation()))
         gym_action = action
         if self.actions_dict is not None:
             gym_action = self.actions_dict[action]
@@ -288,8 +290,10 @@ class AtariDDQN(DDQN):
         o, reward, done, _ = self.env.step(gym_action)
         o = self._preprocess_observation(o)
 
-        if not self.only_model:
+        if self.train:
             super(AtariDDQN, self).learning_step(action, reward, o, done)
+        else:
+            self.replay_memory.add(0, action, reward, o, done)
 
         if done:
             self._reset_episode()
