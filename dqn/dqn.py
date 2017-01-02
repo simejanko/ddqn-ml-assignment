@@ -248,7 +248,6 @@ class AtariDDQN(DDQN):
         self.cut_u = cut_u
         self.cut_d = cut_d
         self.h = h
-        self._set_step_func()
 
         n_actions = self.env.action_space.n
         self.actions_dict = actions_dict
@@ -256,6 +255,8 @@ class AtariDDQN(DDQN):
             n_actions = len(self.actions_dict)
         kwargs['n_actions'] = n_actions
         super(AtariDDQN, self).__init__(**kwargs)
+        if self.train:
+            self._set_step_func()
         self._reset_episode()
 
     def _set_step_func(self):

@@ -34,12 +34,17 @@ def wait_input():
                 print(episodes[i_model])
 
 
-input_t = threading.Thread(target=wait_input)
-input_t.start()
+#input_t = threading.Thread(target=wait_input)
+#input_t.start()
 
-while True:
+rewards = []
+for i in range(100):
     done = False
+    r_sum = 0
     while not done:
         dqns[i_model].env.render()
-        dqns[i_model].learning_step()
-        time.sleep(0.05)
+        _, reward, _, done = dqns[i_model].learning_step()
+        r_sum += reward
+    rewards.append(r_sum)
+
+print("Avg. reward: {}".format(sum(rewards)/len(rewards)))
