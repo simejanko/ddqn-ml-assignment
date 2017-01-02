@@ -73,8 +73,8 @@ class ReplayMemory:
         idx = self.write + self.capacity - 1
 
         self.frame_data[self.write+self.window_size] = obs2
-        #if self.write == 0:
-        #    self.frame_data[self.write: self.window_size] = [obs2] * self.window_size
+        if self.write == 0:
+            self.frame_data[self.write: self.window_size] = [obs2] * self.window_size
         self.data[self.write] = (self.write, a, r, self.write+1, d)
         self.update(idx, p)
 
@@ -100,14 +100,21 @@ class ReplayMemory:
         idx = self._retrieve(0, s)
         dataIdx = idx - self.capacity + 1
         obsIdx, a, r, obs2Idx, d = self.data[dataIdx]
-        obs = [f for f in self.frame_data[obsIdx:obsIdx+self.window_size]]
-        obs2 = [f for f in self.frame_data[obs2Idx:obs2Idx+self.window_size]]
+        if self.window_size == 1:
+            obs = self.frame_data[obsIdx]
+            obs2 = self.frame_data[obs2Idx]
+        else:
+            obs = [f for f in self.frame_data[obsIdx:obsIdx+self.window_size]]
+            obs2 = [f for f in self.frame_data[obs2Idx:obs2Idx+self.window_size]]
         return idx, self.tree[idx], (obs, a, r, obs2, d)
 
     def get_last_observation(self):
         dataIdx = self.write-1
         obsIdx, a, r, obs2Idx, d = self.data[dataIdx]
-        obs2 = [f for f in self.frame_data[obs2Idx:obs2Idx + self.window_size]]
+        if self.window_size == 1:
+            obs2 = self.frame_data[obs2Idx]
+        else:
+            obs2 = [f for f in self.frame_data[obs2Idx:obs2Idx+self.window_size]]
         return obs2
 
     def sample(self, n):
