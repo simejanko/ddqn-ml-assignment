@@ -42,9 +42,10 @@ for i in range(100):
     done = False
     r_sum = 0
     while not done:
-        dqns[i_model].env.render()
+        #dqns[i_model].env.render()
         _, reward, _, done = dqns[i_model].learning_step()
         r_sum += reward
     rewards.append(r_sum)
+    print("Episode {} reward: {}".format(i, r_sum))
 
 print("Avg. reward: {}".format(sum(rewards)/len(rewards)))

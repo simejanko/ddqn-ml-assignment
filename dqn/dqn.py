@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from keras import initializations
 
 def weight_init(shape, name):
-    return initializations.normal(shape, scale=0.01, name=name)
+    return initializations.normal(shape, scale=0.04, name=name)
 
 keras.initializations.weight_init = weight_init
 
@@ -69,7 +69,7 @@ class DDQN():
             #use default model
             model = DEEPMIND_MODEL
             model.add(Dense(n_actions, init=weight_init, activation="linear"))
-            model.compile(optimizer=RMSprop(lr=0.00025), loss='mse')
+            model.compile(optimizer=Adam(lr=0.00025), loss='mse')
 
         self.model = model
         self.n_actions = model.layers[-1].output_shape[1]
@@ -267,14 +267,17 @@ class AtariDDQN(DDQN):
             for _ in range(4):
                 reward += self.env.ale.act(action)
             ob = self.env._get_obs()
-            done = self.env.ale.game_over() or lives_before != self.env.ale.lives()
+            done = self.env.ale.game_over() or lives_before != self.env.ale.lives() or lives_before==0 and reward!=0
             return ob, reward, done, {}
         self.env._step = _step
 
     #mogoče probi non-zero majhne prioritiete
-    def _reset_episode(self):
-        self.replay_memory.add(0, self.env.action_space.sample(), 0, self._preprocess_observation(self.env.reset()), False)
-        for i in range(self.window_size-1):
+    def _reset_episode(self, hard_reset):
+        n_frames = self.window_size
+        if hard_reset:
+            self.replay_memory.add(0, self.env.action_space.sample(), 0, self._preprocess_observation(self.env.reset()), False)
+            n_frames -= 1
+        for i in range(n_frames):
             a = self.env.action_space.sample()
             o = self._preprocess_observation(self.env.step(a)[0])
             self.replay_memory.add(0, a, 0 , o, False)
@@ -296,6 +299,7 @@ class AtariDDQN(DDQN):
         else:
             self.replay_memory.add(0, action, reward, o, done)
 
+        game_over = self.env.ale.game_over()
         if done:
-            self._reset_episode()
-        return action, reward, q_value, done
+            self._reset_episode(game_over)
+        return action, reward, q_value, game_over
