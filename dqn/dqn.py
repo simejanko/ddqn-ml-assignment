@@ -222,7 +222,7 @@ class AtariDDQN(DDQN):
         if only_model:
             model = keras.models.load_model('{}.h5'.format(name))
             dqn = AtariDDQN(env_name, model=model, actions_dict=actions_dict, train=False, s_epsilon=0.05)
-            #dqn._set_step_func()
+            dqn._set_step_func()
             return dqn
 
         dqn = DDQN.load(name)
@@ -255,9 +255,9 @@ class AtariDDQN(DDQN):
             n_actions = len(self.actions_dict)
         kwargs['n_actions'] = n_actions
         super(AtariDDQN, self).__init__(**kwargs)
-        if self.train:
-            self._set_step_func()
-        self._reset_episode()
+        #if self.train: problem pri tem je, da ne ponavljamo vedno akcije 4 frame ampak uniform sampling...
+        self._set_step_func()
+        self._reset_episode(True)
 
     def _set_step_func(self):
         def _step(a):
@@ -267,7 +267,10 @@ class AtariDDQN(DDQN):
             for _ in range(4):
                 reward += self.env.ale.act(action)
             ob = self.env._get_obs()
-            done = self.env.ale.game_over() or lives_before != self.env.ale.lives() or lives_before==0 and reward!=0
+            if self.train:
+                done = self.env.ale.game_over() or lives_before != self.env.ale.lives() or lives_before==0 and reward!=0
+            else:
+                done = self.env.ale.game_over()
             return ob, reward, done, {}
         self.env._step = _step
 
