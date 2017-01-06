@@ -6,7 +6,7 @@ import matplotlib
 matplotlib.rcParams.update({'font.size': 16})
 
 #only odd numbers
-N_AVG = 501
+N_AVG = 51
 LOG_FILE = 'log.txt'
 
 data = np.loadtxt(LOG_FILE, skiprows=1)
