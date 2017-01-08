@@ -6,23 +6,9 @@ from keras.regularizers import l2
 from keras.optimizers import RMSprop
 from keras.metrics import mean_squared_error
 
-#TODO: probi nearest namest bilinear pa probi brez prioritized experience replaya
-#0- neutral, 2-dup, 3-down
-PONG_ACTIONS = [0,2,3]
 MODELS_DIR = 'models'
 OBSERVATION_SIZE = 4
 render = False
-
-"""model = Sequential([
-    Convolution2D(16, 8, 8, input_shape=(4,84,84), subsample=(4,4), border_mode='valid', activation='relu', dim_ordering='th'),
-    Convolution2D(32, 4, 4, subsample=(2,2), border_mode='valid', activation='relu', dim_ordering='th'),
-    Convolution2D(32, 3, 3, subsample=(1,1), border_mode='valid', activation='relu', dim_ordering='th'),
-    Flatten(),
-    Dense(256, activation="relu"),
-    Dense(6, activation="linear"),
-
-])
-model.compile(optimizer=RMSprop(lr=0.00025), loss='mse', metrics=[mean_squared_error])"""
 
 if os.path.isfile('dqn_model.pkl'):
     dqn = AtariDDQN.load('dqn_model')
@@ -53,7 +39,7 @@ while True:
     while not done:
         if render:
             dqn.env.render()
-        #where the actual learning happens. Most of everything else is logging.
+        #where the actual learning happens
         action, reward, q_value, done = dqn.learning_step()
         r_sum += reward
         if q_value is not None:

@@ -29,6 +29,3 @@ plt.plot(frames, average_Q)
 plt.xlabel("Number of training frames (in millions)")
 plt.ylabel("Average action Q-value")
 plt.show()
-
-
-
