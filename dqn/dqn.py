@@ -4,11 +4,15 @@ import copy
 import pickle
 import keras
 from dqn.replay_memory import ReplayMemory
+import math
 from keras.models import  Sequential
-from keras.layers import Dense, Convolution2D, Flatten
+from keras.layers import Dense, Activation, Convolution2D, Flatten
+from keras.regularizers import l2
 from keras.optimizers import RMSprop, Adam
+from keras.metrics import mean_squared_error
 import dqn.utils as utils
 import gym
+import matplotlib.pyplot as plt
 from keras import initializations
 
 def weight_init(shape, name):
@@ -65,7 +69,7 @@ class DDQN():
             #use default model
             model = DEEPMIND_MODEL
             model.add(Dense(n_actions, init=weight_init, activation="linear"))
-            model.compile(optimizer=Adam(lr=0.00025), loss='mse') #or RMSProp(lr=0.00025)
+            model.compile(optimizer=Adam(lr=0.00025), loss='mse') #or RMSProp(lr=)
 
         self.model = model
         self.n_actions = model.layers[-1].output_shape[1]
